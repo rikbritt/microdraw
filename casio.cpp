@@ -35,6 +35,9 @@ int main(int argc, char* argv[])
         SCREEN_WIDTH, SCREEN_HEIGHT);
 
     SDL_Surface* bg = SDL_LoadPNG("casio.png");
+    Font large_lcd_numbers;
+    large_lcd_numbers.InitFont("large_lcd_numbers.png", 22, 55, canvas->format);
+    large_lcd_numbers.m_NumbersOnly = true;
 
     if (!init_fb())
     {
@@ -60,6 +63,34 @@ int main(int argc, char* argv[])
         {
             SDL_BlitSurface(bg, NULL, canvas, NULL);
         }
+
+
+        static char time_str[32];
+        time_t raw; time(&raw);
+        struct tm* t = localtime(&raw);
+        int x = 30;
+        int y = 100;
+        SDL_SetSurfaceColorMod(large_lcd_numbers.m_Surface, 109, 111, 98);
+        snprintf(time_str, sizeof(time_str), "%02d", t->tm_hour);
+        draw_num(canvas, large_lcd_numbers, x, y, time_str, 1);
+        snprintf(time_str, sizeof(time_str), "%02d", t->tm_min);
+        draw_num(canvas, large_lcd_numbers, x + 60, y, time_str, 1);
+        snprintf(time_str, sizeof(time_str), "%02d", t->tm_sec);
+        draw_num(canvas, large_lcd_numbers, x + 120, y, time_str, 1);
+        SDL_SetSurfaceColorMod(large_lcd_numbers.m_Surface, 255, 255, 255);
+
+        x += 2;
+        y += 2;
+        SDL_SetSurfaceColorMod(large_lcd_numbers.m_Surface, 0, 0, 0);
+        snprintf(time_str, sizeof(time_str), "%02d", t->tm_hour);
+        draw_num(canvas, large_lcd_numbers, x, y, time_str, 1);
+        snprintf(time_str, sizeof(time_str), "%02d", t->tm_min);
+        draw_num(canvas, large_lcd_numbers, x + 60, y, time_str, 1);
+        snprintf(time_str, sizeof(time_str), "%02d", t->tm_sec);
+        draw_num(canvas, large_lcd_numbers, x + 120, y, time_str, 1);
+        SDL_SetSurfaceColorMod(large_lcd_numbers.m_Surface, 255, 255, 255);
+
+        //draw_num(canvas, large_lcd_numbers, 10, 10, "12345", 1);
 
         SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
         SDL_RenderClear(ren);

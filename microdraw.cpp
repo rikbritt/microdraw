@@ -24,6 +24,10 @@ void Font::InitFont(const char* bmpName, int w, int h, SDL_PixelFormat format)
     m_GlyphSurfaceH = h;
 
     SDL_Surface* temp_font = SDL_LoadBMP(bmpName);
+    if (!temp_font)
+    {
+        temp_font = SDL_LoadPNG(bmpName);
+    }
     // Force the font into the EXACT same format as our canvas (32-bit ARGB/XRGB)
     m_Surface = SDL_ConvertSurface(temp_font, format);
     SDL_DestroySurface(temp_font);
@@ -238,8 +242,8 @@ void draw_text(SDL_Surface* dest, Font& font, int x, int y, const char* text, in
 
 void draw_num(SDL_Surface* dest, Font& font, int x, int y, const char* text, int scale)
 {
-    int glyph_width = 14;
-    int glyph_height = 15;
+    const int glyph_width = font.m_GlyphSurfaceW;
+    const int glyph_height = font.m_GlyphSurfaceH;
     int space_x = 2;
 
     for (int i = 0; text[i] != '\0'; i++)

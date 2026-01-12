@@ -37,8 +37,8 @@ Global
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|x64.Build.0 = Release|x64
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|x86.ActiveCfg = Release|Win32
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|x86.Build.0 = Release|Win32
-		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Watch Casio|x64.ActiveCfg = Watch Casio|x64
-		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Watch Casio|x64.Build.0 = Watch Casio|x64
+		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Watch Casio|x64.ActiveCfg = Debug|x64
+		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Watch Casio|x64.Build.0 = Debug|x64
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Watch Casio|x86.ActiveCfg = Watch Casio|Win32
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Watch Casio|x86.Build.0 = Watch Casio|Win32
 	EndGlobalSection
