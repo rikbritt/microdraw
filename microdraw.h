@@ -12,9 +12,6 @@ struct SDL_Renderer;
 class Font;
 
 
-const int SCREEN_WIDTH = 320;
-const int SCREEN_HEIGHT = 480;
-
 bool init_fb();
 void blit_to_fb(SDL_Surface* surf);
 void draw_text(SDL_Surface* dest, Font& font, int x, int y, const char* text, int scale);

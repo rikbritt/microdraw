@@ -18,10 +18,10 @@
     <ClCompile Include="screen1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="screen_bg_frames.cpp">
+    <ClCompile Include="microdraw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="microdraw.cpp">
+    <ClCompile Include="casio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

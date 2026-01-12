@@ -207,9 +207,9 @@ void blit_to_fb(SDL_Surface* surf) {
 #ifdef __linux__
     if (!fb_info.fbp) return;
     Uint32* p = (Uint32*)surf->pixels;
-    for (int y = 0; y < SCREEN_HEIGHT; y++) {
-        for (int x = 0; x < SCREEN_WIDTH; x++) {
-            Uint32 c = p[y * SCREEN_WIDTH + x];
+    for (int y = 0; y < surf->h; y++) {
+        for (int x = 0; x < surf->w; x++) {
+            Uint32 c = p[y * surf->w + x];
             fb_info.fbp[y * fb_info.xres + x] = ((c >> 19) << 11) | (((c >> 10) & 0x3F) << 5) | (c >> 3 & 0x1F);
         }
     }

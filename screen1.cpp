@@ -1,7 +1,12 @@
 #include <SDL3/SDL.h>
 
+#include "microdraw.h"
+
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <cmath>
+#include <cstring>
 
 #ifdef __linux__
 #include <fcntl.h>
@@ -11,8 +16,9 @@
 #include <unistd.h>
 #endif
 
-#include "microdraw.h"
 
+const int SCREEN_WIDTH = 320;
+const int SCREEN_HEIGHT = 480;
 
 void UpdateClock(int x, int y, SDL_Surface* dest, Font& font)
 {
@@ -144,13 +150,8 @@ void TextWall::AddToTopOfWall(const char* text)
     SetLine(0, text);
 }
 
-
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <cstring>
-
-void drawSpinningCube(char* ptr, int width, int height, float A, float B, float C) {
+void drawSpinningCube(char* ptr, int width, int height, float A, float B, float C)
+{
     // Buffers and settings
     static float* zBuffer = nullptr;
     if (zBuffer == nullptr)
