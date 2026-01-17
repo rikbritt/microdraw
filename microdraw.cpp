@@ -14,26 +14,145 @@
 #include <unistd.h>
 #endif
 
-#include <SDL3/SDL.h>
+extern bool md_init_impl(int width, int height);
+extern void md_deinit_impl();
+extern MD_Image* md_load_image_impl(const char* filename);
+extern MD_Image* md_load_image_with_key_impl(const char* filename, uint8_t key_r, uint8_t key_g, uint8_t key_b);
+extern MD_Image* md_create_image_impl(int w, int h);
+extern void md_draw_pixel_to_image_impl(MD_Image& image, int x, int y, uint8_t r, uint8_t g, uint8_t b);
+extern void md_destroy_image_impl(MD_Image& image);
+extern int md_get_image_width_impl(const MD_Image& image);
+extern int md_get_image_height_impl(const MD_Image& image);
+extern bool md_draw_image_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect);
+extern bool md_draw_image_scaled_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect);
+extern void md_filled_rect_impl(MD_Rect& rect, uint8_t r, uint8_t g, uint8_t b);
+extern void md_set_image_clip_impl(MD_Image& image, MD_Rect* rect);
+extern void md_set_colour_mod_impl(MD_Image& image, uint8_t key_r, uint8_t key_g, uint8_t key_b);
+extern void md_set_clip_impl(MD_Rect* rect);
+extern void md_get_pixel_x_bounds_impl(MD_Image& image, const MD_Rect& rect, int& xLeftOut, int& xRightOut);
+extern void md_render_impl();
+extern bool md_exit_raised_impl();
 
-const int FB_FPS_LIMIT = 4;
+bool md_init(int width, int height)
+{
+#ifdef __linux__
+    fb_info.fb_fd = open("/dev/fb1", O_RDWR);
+    if (fb_info.fb_fd == -1) return false;
+    struct fb_var_screeninfo vinfo;
+    if (ioctl(fb_info.fb_fd, FBIOGET_VSCREENINFO, &vinfo) == -1) return false;
+    fb_info.xres = vinfo.xres;
+    fb_info.fbp = (unsigned short*)mmap(0, vinfo.xres * vinfo.yres * 2, PROT_READ | PROT_WRITE, MAP_SHARED, fb_info.fb_fd, 0);
+#endif
 
-void Font::InitFont(const char* bmpName, int w, int h, SDL_PixelFormat format)
+    return md_init_impl(width, height);
+}
+
+void md_deinit()
+{
+    md_deinit_impl();
+}
+
+MD_Image* md_load_image(const char* filename)
+{
+    return md_load_image_impl(filename);
+}
+
+MD_Image* md_load_image_with_key(const char* filename, uint8_t key_r, uint8_t key_g, uint8_t key_b)
+{
+    return md_load_image_with_key_impl(filename, key_r, key_g, key_b);
+}
+
+MD_Image* md_create_image(int w, int h)
+{
+    return md_create_image_impl(w, h);
+}
+
+void md_destroy_image(MD_Image& image)
+{
+    md_destroy_image_impl(image);
+}
+
+void md_draw_pixel_to_image(MD_Image& image, int x, int y, uint8_t r, uint8_t g, uint8_t b)
+{
+    md_draw_pixel_to_image_impl(image, x, y, r, g, b);
+}
+
+int md_get_image_width(const MD_Image& image)
+{
+    return md_get_image_width_impl(image);
+}
+
+int md_get_image_height(const MD_Image& image)
+{
+    return md_get_image_height_impl(image);
+}
+
+bool md_draw_image(MD_Image& image)
+{
+    return md_draw_image_impl(image, nullptr, nullptr, nullptr);
+}
+
+bool md_draw_image(MD_Image& image, int x, int y)
+{
+    MD_Rect destRect{ x, y, md_get_image_width(image), md_get_image_height(image) };
+    return md_draw_image_impl(image, nullptr, nullptr, &destRect);
+}
+
+bool md_draw_image(MD_Image& image, MD_Rect& src, MD_Rect& dest)
+{
+    return md_draw_image_impl(image, &src, nullptr, &dest);
+}
+
+bool md_draw_image_scaled(MD_Image& image, MD_Rect& src, MD_Rect& dest)
+{
+    return md_draw_image_scaled_impl(image, &src, nullptr, &dest);
+}
+
+bool md_draw_image_scaled(MD_Image& image, MD_Rect& dest)
+{
+    return md_draw_image_scaled_impl(image, nullptr, nullptr, &dest);
+}
+
+void Font::InitFont(const char* bmpName, int w, int h)
 {
     m_GlyphSurfaceW = w;
     m_GlyphSurfaceH = h;
+    m_Surface = md_load_image_with_key(bmpName, 0, 0, 0);
+}
 
-    SDL_Surface* temp_font = SDL_LoadBMP(bmpName);
-    if (!temp_font)
-    {
-        temp_font = SDL_LoadPNG(bmpName);
-    }
-    // Force the font into the EXACT same format as our canvas (32-bit ARGB/XRGB)
-    m_Surface = SDL_ConvertSurface(temp_font, format);
-    SDL_DestroySurface(temp_font);
+void md_filled_rect(MD_Rect& rect, uint8_t r, uint8_t g, uint8_t b)
+{
+    md_filled_rect_impl(rect, r, g, b);
+}
 
-    // Re-apply transparency on the NEW surface
-    SDL_SetSurfaceColorKey(m_Surface, true, SDL_MapSurfaceRGB(m_Surface, 0, 0, 0));
+void md_set_image_clip(MD_Image& image, MD_Rect& rect)
+{
+    md_set_image_clip_impl(image, &rect);
+}
+
+void md_set_clip(MD_Rect& rect)
+{
+    md_set_clip_impl(&rect);
+}
+
+void md_clear_clip()
+{
+    md_set_clip_impl(nullptr);
+}
+
+void md_set_colour_mod(MD_Image& image, uint8_t key_r, uint8_t key_g, uint8_t key_b)
+{
+    md_set_colour_mod_impl(image, key_r, key_g, key_b);
+}
+
+void md_render()
+{
+    md_render_impl();
+}
+
+bool md_exit_raised()
+{
+    return md_exit_raised_impl();
 }
 
 int Font::GetGlyphWidth(char c) const
@@ -46,70 +165,22 @@ int Font::GetGlyphWidth(char c) const
     return m_GlyphData[c].width;
 }
 
-int Font::GetGlyphHeight(char c) const 
+int Font::GetGlyphHeight(char c) const
 {
     return m_GlyphSurfaceH;
 }
 
-SDL_Rect Font::GetGlpyphRect(char c) const 
+MD_Rect Font::GetGlpyphRect(char c) const
 {
     // Calculate position in a 16x8 grid (Standard ASCII layout)
     const int w = GetGlyphWidth(c);
     const int h = GetGlyphHeight(c);
-    SDL_Rect src = { (c % 16) * m_GlyphSurfaceW, (c / 16) * m_GlyphSurfaceH, w, h };
+    MD_Rect src = { (c % 16) * m_GlyphSurfaceW, (c / 16) * m_GlyphSurfaceH, w, h };
     if (!m_Monospace)
     {
         src.x += m_GlyphData[c].left;
     }
     return src;
-}
-
-void GetPixelXBounds(SDL_Surface* surface, SDL_Rect rect, int& xLeftOut, int& xRightOut) 
-{
-    // Ensure we don't read outside surface boundaries
-    int startX = std::max(0, rect.x);
-    int startY = std::max(0, rect.y);
-    int endX = std::min(surface->w, rect.x + rect.w);
-    int endY = std::min(surface->h, rect.y + rect.h);
-
-    if (SDL_MUSTLOCK(surface)) SDL_LockSurface(surface);
-
-    Uint32* pixels = (Uint32*)surface->pixels;
-    int pitch = surface->pitch / sizeof(Uint32);
-
-    // 1. Find Leftmost: Scan columns from left to right
-    xLeftOut = rect.w;
-    bool foundLeft = false;
-    for (int x = startX; x < endX && !foundLeft; ++x) {
-        for (int y = startY; y < endY; ++y) {
-            Uint32 pixel = pixels[y * pitch + x];
-            // Check if pixel is not black (ignoring alpha channel)
-            if ((pixel & 0x00FFFFFF) != 0) {
-                xLeftOut = x - startX;
-                foundLeft = true;
-                break;
-            }
-        }
-    }
-
-    // 2. Find Rightmost: Scan columns from right to left
-    xRightOut = 0;
-    bool foundRight = false;
-    for (int x = endX - 1; x >= startX && !foundRight; --x) {
-        for (int y = startY; y < endY; ++y) {
-            Uint32 pixel = pixels[y * pitch + x];
-            if ((pixel & 0x00FFFFFF) != 0) {
-                xRightOut = x - startX;
-                foundRight = true;
-                break;
-            }
-        }
-    }
-
-    if (SDL_MUSTLOCK(surface))
-    {
-        SDL_UnlockSurface(surface);
-    }
 }
 
 void Font::MakeVariableWidth()
@@ -119,11 +190,12 @@ void Font::MakeVariableWidth()
         const char c = (char)i;
         const int w = m_GlyphSurfaceW;
         const int h = m_GlyphSurfaceH;
-        const SDL_Rect src = GetGlpyphRect(c);
+        const MD_Rect src = GetGlpyphRect(c);
 
         // Get where the font pixel data starts and stops along the X axis, and set the character width to match
         GlyphData& glyphData = m_GlyphData[i];
-        GetPixelXBounds(m_Surface, src, glyphData.left, glyphData.right);
+        md_get_pixel_x_bounds_impl(*m_Surface, src, glyphData.left, glyphData.right);
+        //GetPixelXBounds(m_Surface, src, glyphData.left, glyphData.right);
         glyphData.width = (glyphData.right - glyphData.left) + 1;
 
         // For fully empty characters
@@ -131,116 +203,32 @@ void Font::MakeVariableWidth()
         {
             glyphData.width = w / 2;
         }
-     
+
     }
 
     m_Monospace = false;
     m_SpacingX = 1;
 }
 
-
-typedef struct {
-    int fb_fd;
-    unsigned short* fbp;
-    int xres;
-} FBInfo;
-
-SDL_Surface* LoadBMPWithColorKey(const char* bmpName, SDL_PixelFormat format)
-{
-    SDL_Surface* temp = SDL_LoadBMP(bmpName);
-
-    // Force the bmp into the EXACT same format as our canvas (32-bit ARGB/XRGB)
-    SDL_Surface* bmp = SDL_ConvertSurface(temp, format);
-    SDL_DestroySurface(temp);
-
-    // Re-apply transparency on the NEW surface
-    SDL_SetSurfaceColorKey(bmp, true, SDL_MapSurfaceRGB(bmp, 0, 0, 0));
-    return bmp;
-}
-
-
-/**
- * Loads key=value pairs into an existing map.
- * @param filename The path to the file as a C-string.
- * @param configMap Reference to the map where data will be stored.
- */
-void LoadConfigToMap(const char* filename, Values& configMap)
-{
-    std::ifstream file(filename);
-
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open file " << filename << std::endl;
-        return;
-    }
-
-    std::string line;
-    while (std::getline(file, line))
-    {
-        // Skip empty lines to prevent errors
-        if (line.empty()) continue;
-
-        size_t delimiterPos = line.find('=');
-
-        if (delimiterPos != std::string::npos) {
-            std::string key = line.substr(0, delimiterPos);
-            std::string value = line.substr(delimiterPos + 1);
-
-            configMap[key] = value;
-        }
-    }
-
-    file.close();
-}
-
-FBInfo fb_info = { -1, NULL, 0 };
-
-bool init_fb() {
-#ifdef __linux__
-    fb_info.fb_fd = open("/dev/fb1", O_RDWR);
-    if (fb_info.fb_fd == -1) return false;
-    struct fb_var_screeninfo vinfo;
-    if (ioctl(fb_info.fb_fd, FBIOGET_VSCREENINFO, &vinfo) == -1) return false;
-    fb_info.xres = vinfo.xres;
-    fb_info.fbp = (unsigned short*)mmap(0, vinfo.xres * vinfo.yres * 2, PROT_READ | PROT_WRITE, MAP_SHARED, fb_info.fb_fd, 0);
-    return true;
-#endif
-    return true;
-}
-
-void blit_to_fb(SDL_Surface* surf) {
-#ifdef __linux__
-    if (!fb_info.fbp) return;
-    Uint32* p = (Uint32*)surf->pixels;
-    for (int y = 0; y < surf->h; y++) {
-        for (int x = 0; x < surf->w; x++) {
-            Uint32 c = p[y * surf->w + x];
-            fb_info.fbp[y * fb_info.xres + x] = ((c >> 19) << 11) | (((c >> 10) & 0x3F) << 5) | (c >> 3 & 0x1F);
-        }
-    }
-#else
-    SDL_Delay(1000 / FB_FPS_LIMIT);
-#endif
-}
-
 // Draw text using an 8x8 bitmap font sheet
-void draw_text(SDL_Surface* dest, Font& font, int x, int y, const char* text, int scale)
+void draw_text(Font& font, int x, int y, const char* text, int scale)
 {
-    SDL_Rect dst = { x, y, 0, 0 };
+    MD_Rect dst = { x, y, 0, 0 };
     for (int i = 0; text[i] != '\0'; i++)
     {
         int ascii = (unsigned char)text[i] - 1;
-        SDL_Rect src = font.GetGlpyphRect(ascii);
+        MD_Rect src = font.GetGlpyphRect(ascii);
         dst.w = src.w * scale;
         dst.h = src.h * scale;
         //SDL_Rect src = { (ascii % 16) * 8, (ascii / 16) * 8, 8, 8 };
         //SDL_Rect dst = { x + (i * 8 * scale), y, 8 * scale, 8 * scale };
-        SDL_BlitSurfaceScaled(font.m_Surface, &src, dest, &dst, SDL_SCALEMODE_NEAREST);
+        md_draw_image_scaled(*font.m_Surface, src, dst);
         dst.x += src.w * scale;
         dst.x += font.m_SpacingX * scale;
     }
 }
 
-void draw_num(SDL_Surface* dest, Font& font, int x, int y, const char* text, int scale)
+void draw_num(Font& font, int x, int y, const char* text, int scale)
 {
     const int glyph_width = font.m_GlyphSurfaceW;
     const int glyph_height = font.m_GlyphSurfaceH;
@@ -258,57 +246,33 @@ void draw_num(SDL_Surface* dest, Font& font, int x, int y, const char* text, int
         // Calculate position in a 16x8 grid (Standard ASCII layout)
         int xIdx = ascii % 5;
         int yIdx = ascii / 5;
-        SDL_Rect src = { xIdx * glyph_width, yIdx * glyph_height, glyph_width, glyph_height };
-        SDL_Rect dst = { x + (i * (glyph_width + space_x) * scale), y, glyph_width * scale, glyph_height * scale };
-        int res = SDL_BlitSurfaceScaled(font.m_Surface, &src, dest, &dst, SDL_SCALEMODE_NEAREST);
-        if (res != 0)
-        {
-            const char* err = SDL_GetError();
-        }
+        MD_Rect src = { xIdx * glyph_width, yIdx * glyph_height, glyph_width, glyph_height };
+        MD_Rect dst = { x + (i * (glyph_width + space_x) * scale), y, glyph_width * scale, glyph_height * scale };
+        md_draw_image_scaled(*font.m_Surface, src, dst);
+        //int res = SDL_BlitSurfaceScaled(font.m_Surface, &src, dest, &dst, SDL_SCALEMODE_NEAREST);
+        //if (res != 0)
+        //{
+        //    const char* err = SDL_GetError();
+        //}
     }
 }
-
-
-
-void FlipBookImage::InitFlipbook(const char* bmpName, int numCols, int numRows, int x, int y)
-{
-    m_Image = SDL_LoadBMP(bmpName);
-    m_Width = m_Image->w / numCols;
-    m_Height = m_Image->h / numRows;
-    m_Cols = numCols;
-    m_Rows = numRows;
-    m_X = x;
-    m_Y = y;
-}
-
-void FlipBookImage::UpdateFlipbook(SDL_Surface* dest)
-{
-    const int sourceIdxX = (m_Frame % m_Cols);
-    const int sourceIdxY = (m_Frame / m_Cols);
-    m_Frame = (m_Frame + 1) % (m_Cols * m_Rows);
-    const SDL_Rect sourceRect = { sourceIdxX * m_Width, sourceIdxY * m_Height, m_Width, m_Height };
-    SDL_Rect destRect = { m_X, m_Y, m_Width, m_Height };
-    SDL_BlitSurface(m_Image, &sourceRect, dest, &destRect);
-}
-
-
 
 
 
 
 void PanningImage::InitPanningImage(const char* file, int x, int y, int w, int h)
 {
-    m_Image = SDL_LoadBMP(file);
+    m_Image = md_load_image_with_key(file, 0, 0, 0);
     m_Rect.x = x;
     m_Rect.y = y;
     m_Rect.w = w;
     m_Rect.h = h;
 }
 
-void PanningImage::UpdateAndDrawPanningImage(SDL_Renderer* ren, SDL_Surface* dest)
+void PanningImage::UpdateAndDrawPanningImage()
 {
-    SDL_SetSurfaceClipRect(dest, &m_Rect);
-    SDL_Rect scrolled = m_Rect;
+    md_set_clip(m_Rect);
+    MD_Rect scrolled = m_Rect;
     if (m_panHorizontal)
     {
         scrolled.x += (int)m_Scroll;
@@ -318,27 +282,56 @@ void PanningImage::UpdateAndDrawPanningImage(SDL_Renderer* ren, SDL_Surface* des
         scrolled.y += (int)m_Scroll;
     }
     m_Scroll = m_Scroll + m_Speed;
-    SDL_BlitSurface(m_Image, NULL, dest, &scrolled);
+    md_draw_image(*m_Image, scrolled.x, scrolled.y);
+    //SDL_BlitSurface(m_Image, NULL, dest, &scrolled);
     if (m_panHorizontal)
     {
-        scrolled.x -= m_Image->w;
-        if (m_Scroll > m_Image->w)
+        const int w = md_get_image_width(*m_Image);
+        scrolled.x -= w;
+        if (m_Scroll > w)
         {
-            m_Scroll -= m_Image->w;
+            m_Scroll -= w;
         }
     }
     else
     {
-        scrolled.y -= m_Image->h;
-        if (m_Scroll > m_Image->h)
+        const int h = md_get_image_height(*m_Image);
+        scrolled.y -= h;
+        if (m_Scroll > h)
         {
-            m_Scroll -= m_Image->h;
+            m_Scroll -= h;
         }
     }
-    SDL_BlitSurface(m_Image, NULL, dest, &scrolled);
+    //SDL_BlitSurface(m_Image, NULL, dest, &scrolled);
+    md_draw_image(*m_Image, scrolled.x, scrolled.y);
 
-    SDL_SetSurfaceClipRect(dest, NULL);
+    md_clear_clip();
 }
+
+
+
+void FlipBookImage::InitFlipbook(const char* bmpName, int numCols, int numRows, int x, int y)
+{
+    m_Image = md_load_image(bmpName);
+    m_Width = md_get_image_width(*m_Image) / numCols;
+    m_Height = md_get_image_height(*m_Image) / numRows;
+    m_Cols = numCols;
+    m_Rows = numRows;
+    m_X = x;
+    m_Y = y;
+}
+
+void FlipBookImage::UpdateFlipbook()
+{
+    const int sourceIdxX = (m_Frame % m_Cols);
+    const int sourceIdxY = (m_Frame / m_Cols);
+    m_Frame = (m_Frame + 1) % (m_Cols * m_Rows);
+    MD_Rect sourceRect = { sourceIdxX * m_Width, sourceIdxY * m_Height, m_Width, m_Height };
+    MD_Rect destRect = { m_X, m_Y, m_Width, m_Height };
+    md_draw_image(*m_Image, sourceRect, destRect);
+    //SDL_BlitSurface(m_Image, &sourceRect, dest, &destRect);
+}
+
 
 
 
@@ -570,47 +563,4 @@ const char* JSONVal::GetAsString() const
     }
 
     return m_value->c_str();
-}
-
-/**
- * Converts HSL color values to SDL_Color (RGBA).
- * @param h Hue in degrees [0.0, 360.0]
- * @param s Saturation percentage [0.0, 1.0]
- * @param l Lightness percentage [0.0, 1.0]
- * @param a Alpha value [0, 255] (defaults to 255)
- */
-SDL_Color HSLToSDLColor(float h, float s, float l, Uint8 a) 
-{
-    // Clamp values to ensure they are in range
-    h = fmod(h, 360.0f);
-    if (h < 0) h += 360.0f;
-    s = std::clamp(s, 0.0f, 1.0f);
-    l = std::clamp(l, 0.0f, 1.0f);
-
-    float c = (1.0f - std::abs(2.0f * l - 1.0f)) * s; // Chroma
-    float x = c * (1.0f - std::abs(fmod(h / 60.0f, 2.0f) - 1.0f));
-    float m = l - c / 2.0f;
-
-    float r_tmp = 0, g_tmp = 0, b_tmp = 0;
-
-    if (h < 60) { r_tmp = c; g_tmp = x; b_tmp = 0; }
-    else if (h < 120) { r_tmp = x; g_tmp = c; b_tmp = 0; }
-    else if (h < 180) { r_tmp = 0; g_tmp = c; b_tmp = x; }
-    else if (h < 240) { r_tmp = 0; g_tmp = x; b_tmp = c; }
-    else if (h < 300) { r_tmp = x; g_tmp = 0; b_tmp = c; }
-    else { r_tmp = c; g_tmp = 0; b_tmp = x; }
-
-    SDL_Color color;
-    color.r = static_cast<Uint8>((r_tmp + m) * 255);
-    color.g = static_cast<Uint8>((g_tmp + m) * 255);
-    color.b = static_cast<Uint8>((b_tmp + m) * 255);
-    color.a = a;
-
-    return color;
-}
-
-int LerpInt(float t, int from, int to)
-{
-    const int out = ((to - from) * t) + from;
-    return out;
 }

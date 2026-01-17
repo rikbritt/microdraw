@@ -193,6 +193,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="microdraw.cpp" />
+    <ClCompile Include="microdraw_sdl.cpp" />
     <ClCompile Include="screen1.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Watch Casio|x64'">true</ExcludedFromBuild>
@@ -200,6 +201,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="microdraw.h" />
+    <ClInclude Include="microdraw_sdl.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="sdl3\VisualC\SDL\SDL.vcxproj">

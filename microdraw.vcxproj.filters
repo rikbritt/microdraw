@@ -24,9 +24,15 @@
     <ClCompile Include="casio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="microdraw_sdl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="microdraw.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="microdraw_sdl.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

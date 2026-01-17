@@ -4,43 +4,57 @@
 #include <string>
 #include <vector>
 
-#include <SDL3/SDL_rect.h>
-#include <SDL3/SDL_pixels.h>
+struct MD_Image;
 
-struct SDL_Surface;
-struct SDL_Renderer;
-class Font;
+struct MD_Rect
+{
+    int x, y;
+    int w, h;
+};
 
+bool md_init(int width, int height);
+void md_deinit();
+MD_Image* md_load_image(const char* filename);
 
-bool init_fb();
-void blit_to_fb(SDL_Surface* surf);
-void draw_text(SDL_Surface* dest, Font& font, int x, int y, const char* text, int scale);
-void draw_num(SDL_Surface* dest, Font& font, int x, int y, const char* text, int scale);
-
-typedef std::map<std::string, std::string> Values;
-void LoadConfigToMap(const char* filename, Values& configMap);
-
-SDL_Surface* LoadBMPWithColorKey(const char* bmpName, SDL_PixelFormat format);
+// Load image with transparent colour key
+MD_Image* md_load_image_with_key(const char* filename, uint8_t key_r, uint8_t key_g, uint8_t key_b);
+MD_Image* md_create_image(int w, int h);
+void md_destroy_image(MD_Image& image);
+void md_draw_pixel_to_image(MD_Image& image, int x, int y, uint8_t r, uint8_t g, uint8_t b);
+int md_get_image_width(const MD_Image& image);
+int md_get_image_height(const MD_Image& image);
+bool md_draw_image(MD_Image& image);
+bool md_draw_image(MD_Image& image, int x, int y);
+bool md_draw_image(MD_Image& image, MD_Rect& src, MD_Rect& dest);
+bool md_draw_image_scaled(MD_Image& image, MD_Rect& src, MD_Rect& dest);
+bool md_draw_image_scaled(MD_Image& image, MD_Rect& dest);
+void md_filled_rect(MD_Rect& rect, uint8_t r, uint8_t g, uint8_t b);
+void md_set_image_clip(MD_Image& image, MD_Rect& rect);
+void md_set_clip(MD_Rect& rect);
+void md_clear_clip();
+void md_set_colour_mod(MD_Image& image, uint8_t key_r, uint8_t key_g, uint8_t key_b);
+void md_render();
+bool md_exit_raised();
 
 class Font
 {
 public:
-    void InitFont(const char* bmpName, int w, int h, SDL_PixelFormat format);
+    void InitFont(const char* bmpName, int w, int h);
     void MakeVariableWidth();
 
     int GetGlyphWidth(char c) const;
     int GetGlyphHeight(char c) const;
 
-    SDL_Rect GetGlpyphRect(char c) const;
+    MD_Rect GetGlpyphRect(char c) const;
 
-    SDL_Surface* m_Surface;
+    MD_Image* m_Surface;
     int m_SpacingX = 0;
     int m_GlyphSurfaceW;
     int m_GlyphSurfaceH;
     int m_NumbersOnly = false;
     bool m_Monospace = true;
 
-    struct GlyphData 
+    struct GlyphData
     {
         int left = -1; //x of first non black pixel
         int right = -1; //x of last non black pixel
@@ -49,15 +63,36 @@ public:
     GlyphData m_GlyphData[256];
 };
 
+void draw_text(Font& font, int x, int y, const char* text, int scale);
+void draw_num(Font& font, int x, int y, const char* text, int scale);
+
+
+
+class PanningImage
+{
+public:
+    void InitPanningImage(const char* file, int x, int y, int w, int h);
+
+    void UpdateAndDrawPanningImage();
+
+    MD_Image* m_Image;
+    MD_Rect m_Rect;
+    float m_Speed = 0.25f;
+    float m_Scroll = 0;
+    bool m_panHorizontal = true;
+};
+
+
+
 // Display an image built from a sprite sheet / image with many frames.
 class FlipBookImage
 {
 public:
     void InitFlipbook(const char* bmpName, int numCols, int numRows, int x, int y);
 
-    void UpdateFlipbook(SDL_Surface* dest);
+    void UpdateFlipbook();
 
-    SDL_Surface* m_Image = nullptr;
+    MD_Image* m_Image = nullptr;
 
     // How many columns and rows are in the flipbook image
     int m_Cols = 0;
@@ -76,20 +111,6 @@ public:
 };
 
 
-
-class PanningImage
-{
-public:
-    void InitPanningImage(const char* file, int x, int y, int w, int h);
-
-    void UpdateAndDrawPanningImage(SDL_Renderer* ren, SDL_Surface* dest);
-
-    SDL_Surface* m_Image;
-    SDL_Rect m_Rect;
-    float m_Speed = 0.25f;
-    float m_Scroll = 0;
-    bool m_panHorizontal = true;
-};
 
 
 struct JSONVal
@@ -117,15 +138,3 @@ protected:
 
 bool ParseJSON(const char* json, JSONVal& jsonDocOut);
 bool ParseJSONFile(const char* filename, JSONVal& jsonDocOut);
-
-
-
-/**
- * Converts HSL color values to SDL_Color (RGBA).
- * @param h Hue in degrees [0.0, 360.0]
- * @param s Saturation percentage [0.0, 1.0]
- * @param l Lightness percentage [0.0, 1.0]
- * @param a Alpha value [0, 255] (defaults to 255)
- */
-SDL_Color HSLToSDLColor(float h, float s, float l, Uint8 a = 255);
-int LerpInt(float t, int from, int to);

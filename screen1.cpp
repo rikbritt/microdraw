@@ -1,6 +1,7 @@
-#include <SDL3/SDL.h>
-
 #include "microdraw.h"
+
+#define MICRODRAW_SDL
+#include "microdraw_sdl.h"
 
 #include <fstream>
 #include <iostream>
@@ -20,17 +21,17 @@
 const int SCREEN_WIDTH = 320;
 const int SCREEN_HEIGHT = 480;
 
-void UpdateClock(int x, int y, SDL_Surface* dest, Font& font)
+void UpdateClock(int x, int y, Font& font)
 {
     static char time_str[32];
     time_t raw; time(&raw);
     struct tm* t = localtime(&raw);
     snprintf(time_str, sizeof(time_str), "%02d", t->tm_hour);
-    draw_num(dest, font, x, y, time_str, 2);
+    draw_num(font, x, y, time_str, 2);
     snprintf(time_str, sizeof(time_str), "%02d", t->tm_min);
-    draw_num(dest, font, x + 80, y, time_str, 2);
+    draw_num(font, x + 80, y, time_str, 2);
     snprintf(time_str, sizeof(time_str), "%02d", t->tm_sec);
-    draw_num(dest, font, x + 160, y, time_str, 2);
+    draw_num(font, x + 160, y, time_str, 2);
 }
 
 struct TextWall
@@ -69,20 +70,20 @@ struct TextWall
     {
         memset(m_Text, 0, m_CharW * m_CharH);
     }
-    void DrawTextWall(SDL_Surface* dest, SDL_Color col)
+    void DrawTextWall(uint8_t r, uint8_t g, uint8_t b)
     {
         static char line[128];
-        SDL_SetSurfaceColorMod(m_Font->m_Surface, col.r, col.g, col.b);
+        md_set_colour_mod(*m_Font->m_Surface, r, g, b);
         for (int y = 0; y < m_CharH; ++y)
         {
             memcpy(line, &m_Text[y * m_CharW], m_CharW);
             line[m_CharW] = '\0';
-            draw_text(dest, *m_Font, m_Rect.x, m_Rect.y + (y * m_Font->m_GlyphSurfaceH), line, 1);
+            draw_text(*m_Font, m_Rect.x, m_Rect.y + (y * m_Font->m_GlyphSurfaceH), line, 1);
         }
-        SDL_SetSurfaceColorMod(m_Font->m_Surface, 255, 255, 255);
+        md_set_colour_mod(*m_Font->m_Surface, 255, 255, 255);
     }
 
-    SDL_Rect m_Rect;
+    MD_Rect m_Rect;
     Font* m_Font = nullptr;
     char* m_Text = nullptr;
     int m_CharW = 0;
@@ -367,7 +368,7 @@ public:
 class ControlIndicator
 {
 public:
-    void InitControlIndicator(int stackSize, int x, int y, SDL_Surface& controlBar)
+    void InitControlIndicator(int stackSize, int x, int y, MD_Image& controlBar)
     {
         m_StackSize = stackSize;
         //m_State = new bool[stackSize];
@@ -375,6 +376,8 @@ public:
         m_ControlBar = &controlBar;
         m_X = x;
         m_Y = y;
+        m_ControlBarW = md_get_image_width(controlBar);
+        m_ControlBarH = md_get_image_height(controlBar);
     }
 
     ~ControlIndicator()
@@ -382,9 +385,11 @@ public:
         //delete m_State;
     }
 
-    void UpdateAndDraw(SDL_Surface* dest)
+    void UpdateAndDraw()
     {
-        SDL_Rect destRect = { m_X, m_Y, m_ControlBar->w, m_ControlBar->h };
+        int destX = m_X;
+        int destY = m_Y;
+        //MD_Rect destRect = { m_X, m_Y, m_ControlBarW, m_ControlBarH };
 
         if (rand() % 3 == 0)
         {
@@ -416,14 +421,16 @@ public:
                 col.b = LerpInt(t, m_OffColour.b, m_OnColour.b);
             }
 
-            SDL_SetSurfaceColorMod(m_ControlBar, col.r, col.g, col.b);
+            md_set_colour_mod(*m_ControlBar, col.r, col.g, col.b);
             
-            SDL_BlitSurface(m_ControlBar, NULL, dest, &destRect);
-            destRect.y += destRect.h + 2;
+            md_draw_image(*m_ControlBar, destX, destY);
+            destY += m_ControlBarH + 2;
         }
     }
 
-    SDL_Surface* m_ControlBar = nullptr; // NO OWNERSHIP
+    MD_Image* m_ControlBar = nullptr; // NO OWNERSHIP
+    int m_ControlBarW;
+    int m_ControlBarH;
     int m_StackSize = 0;
     int m_X = 0;
     int m_Y = 0;
@@ -446,10 +453,10 @@ class Gradient
 public:
     ~Gradient();
     void Reset();
-    void InitGradient(SDL_Renderer* renderer, SDL_Color startColor, SDL_Color endColor, const SDL_Rect& dstRect);
-    void RenderGradient(SDL_Renderer* renderer, SDL_Surface* dest);
-    SDL_Surface* m_Surface = nullptr;
-    SDL_Rect m_Rect{ 0,0,0,0 };
+    void InitGradient(SDL_Color startColor, SDL_Color endColor, const MD_Rect& dstRect);
+    void RenderGradient();
+    MD_Image* m_Surface = nullptr;
+    MD_Rect m_Rect{ 0,0,0,0 };
 };
 
 Gradient::~Gradient()
@@ -459,11 +466,11 @@ Gradient::~Gradient()
 
 void Gradient::Reset()
 {
-    SDL_DestroySurface(m_Surface);
+    md_destroy_image_impl(*m_Surface);
     m_Surface = nullptr;
 }
 
-void Gradient::InitGradient(SDL_Renderer* renderer, SDL_Color startColor, SDL_Color endColor, const SDL_Rect& dstRect)
+void Gradient::InitGradient(SDL_Color startColor, SDL_Color endColor, const MD_Rect& dstRect)
 {
     if (m_Surface)
     {
@@ -473,16 +480,11 @@ void Gradient::InitGradient(SDL_Renderer* renderer, SDL_Color startColor, SDL_Co
     m_Rect = dstRect;
     const int height = m_Rect.h;
 
-    SDL_Surface* surface = SDL_CreateSurface(1, height, SDL_PIXELFORMAT_RGBA32);
+    MD_Image* surface = md_create_image(1, height);
     m_Surface = surface;
 
-    // 2. Access the raw pixels
-    Uint32* pixels = (Uint32*)surface->pixels;
-    if (!pixels)
+    for (int y = 0; y < height; ++y) 
     {
-        return;
-    }
-    for (int y = 0; y < height; ++y) {
         // Calculate the interpolation factor (0.0 to 1.0)
         float t = (float)y / (float)(height - 1);
 
@@ -493,13 +495,13 @@ void Gradient::InitGradient(SDL_Renderer* renderer, SDL_Color startColor, SDL_Co
         Uint8 a = (Uint8)(startColor.a + t * (endColor.a - startColor.a));
 
         // 4. Map the color to the surface format and store it
-        pixels[y] = SDL_MapSurfaceRGBA(surface, r, g, b, a);
+        md_draw_pixel_to_image(*surface, 0, y, r, g, b);
     }
 }
 
-void Gradient::RenderGradient(SDL_Renderer* renderer, SDL_Surface* dest)
+void Gradient::RenderGradient()
 {
-    SDL_BlitSurfaceScaled(m_Surface, NULL, dest, &m_Rect, SDL_SCALEMODE_NEAREST);
+    md_draw_image_scaled(*m_Surface, m_Rect);
 }
 
 SDL_Color TempToColor(float temp)
@@ -563,46 +565,51 @@ struct WeatherSat
     const WeatherData* m_WeatherData;
     FlipBookImage m_satPlanet;
 
-    void InitWeatherSat(const WeatherData& weather, SDL_Renderer* ren)
+    void InitWeatherSat(const WeatherData& weather)
     {
         m_satPlanet.InitFlipbook("planet.bmp", 5, 6, 13, 250);
-        m_tempGradient.InitGradient(ren, TempToColor(weather.m_TempMax), TempToColor(weather.m_TempMin), SDL_Rect{ 16, 266, 4, 91 });
+        m_tempGradient.InitGradient(TempToColor(weather.m_TempMax), TempToColor(weather.m_TempMin), MD_Rect{ 16, 266, 4, 91 });
         m_WeatherData = &weather;
     }
-    void DrawWeatherSat(SDL_Renderer* ren, SDL_Surface* dest, Font& font);
-    void OnWeatherUpdated(SDL_Renderer* ren)
+    void DrawWeatherSat(Font& font);
+    void OnWeatherUpdated()
     {
-        m_tempGradient.InitGradient(ren, TempToColor(m_WeatherData->m_TempMax), TempToColor(m_WeatherData->m_TempMin), m_tempGradient.m_Rect);
+        m_tempGradient.InitGradient(TempToColor(m_WeatherData->m_TempMax), TempToColor(m_WeatherData->m_TempMin), m_tempGradient.m_Rect);
     }
 };
 
-void WeatherSat::DrawWeatherSat(SDL_Renderer* ren, SDL_Surface* dest, Font& font)
+void WeatherSat::DrawWeatherSat(Font& font)
 {
-    m_satPlanet.UpdateFlipbook(dest);
+    m_satPlanet.UpdateFlipbook();
 
     snprintf(buff, sizeof(buff), "%0.1fC", m_WeatherData->m_TempMax);
-    draw_text(dest, font, 15, 255, buff, 1);
+    draw_text(font, 15, 255, buff, 1);
 
     snprintf(buff, sizeof(buff), "%0.1fC", m_WeatherData->m_TempMin);
-    draw_text(dest, font, 15, 360, buff, 1);
+    draw_text(font, 15, 360, buff, 1);
 
     if (m_WeatherData->m_TempMin == m_WeatherData->m_TempMax)
     {
         return;
     }
-    m_tempGradient.RenderGradient(ren, dest);
+    m_tempGradient.RenderGradient();
 
     const float currTempT = 1.0f - (m_WeatherData->m_CurrentTemp - m_WeatherData->m_TempMin) / (m_WeatherData->m_TempMax - m_WeatherData->m_TempMin);
     const int currTempY = (int)((currTempT * m_tempGradient.m_Rect.h) + m_tempGradient.m_Rect.y);
-    SDL_Rect currTempRect = { 14, currTempY, 10, 2 };
-    SDL_FillSurfaceRect(dest, &currTempRect, SDL_MapSurfaceRGBA(dest, 255, 255, 255, 255));
+    MD_Rect currTempRect = { 14, currTempY, 10, 2 };
+    md_filled_rect(currTempRect, 255, 255, 255);
 
     snprintf(buff, sizeof(buff), "%0.1fC", m_WeatherData->m_CurrentTemp);
-    draw_text(dest, font, 28, currTempY - (font.m_GlyphSurfaceH/3), buff, 1);
+    draw_text(font, 28, currTempY - (font.m_GlyphSurfaceH/3), buff, 1);
 }
 
 int main(int argc, char* argv[]) 
 {
+    if (!md_init(SCREEN_WIDTH, SCREEN_HEIGHT))
+    {
+        return -1;
+    }
+
     srand((unsigned int)time(NULL));
 
     WeatherData weather;
@@ -640,25 +647,12 @@ int main(int argc, char* argv[])
 
     std::map<std::string, std::string> values;
 
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* win = SDL_CreateWindow("Pi Display", SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-    SDL_Renderer* ren = SDL_CreateRenderer(win, nullptr);
-
-    // 1. Create the Surface for drawing (CPU side)
-    SDL_Surface* canvas = SDL_CreateSurface(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_PIXELFORMAT_XRGB8888);
-
-    // 2. Create ONE Texture (GPU side) - Do this BEFORE the loop
-    SDL_Texture* screen_tex = SDL_CreateTexture(ren,
-        SDL_PIXELFORMAT_XRGB8888,
-        SDL_TEXTUREACCESS_STREAMING,
-        SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    SDL_Surface* bg = SDL_LoadBMP("back_ops.bmp");
-    SDL_Surface* reactor_red = LoadBMPWithColorKey("reactor_red.bmp", canvas->format);
+    MD_Image* bg = md_load_image("back_ops.bmp");
+    MD_Image* reactor_red = md_load_image_with_key("reactor_red.bmp", 0, 0, 0);
 
 
-    SDL_Surface* control_bar = LoadBMPWithColorKey("control_bar.bmp", canvas->format);
-    SDL_Surface* control_bar2 = LoadBMPWithColorKey("control_bar2.bmp", canvas->format);
+    MD_Image* control_bar = md_load_image_with_key("control_bar.bmp", 0, 0, 0);
+    MD_Image* control_bar2 = md_load_image_with_key("control_bar2.bmp", 0, 0, 0);
     constexpr int numControlStacks = 5;
     ControlIndicator controlStacks[numControlStacks];
     controlStacks[0].InitControlIndicator(9, 161, 344, *control_bar);
@@ -668,14 +662,14 @@ int main(int argc, char* argv[])
     controlStacks[4].InitControlIndicator(9, 256, 344, *control_bar2);
 
     Font monoFont;
-    monoFont.InitFont("font.bmp", 8, 8, canvas->format);
+    monoFont.InitFont("font.bmp", 8, 8);
 
     Font varFont;
-    varFont.InitFont("font.bmp", 8, 8, canvas->format);
+    varFont.InitFont("font.bmp", 8, 8);
     varFont.MakeVariableWidth();
 
     Font fontNumLarge;
-    fontNumLarge.InitFont("num_large.bmp", 8, 8, canvas->format);
+    fontNumLarge.InitFont("num_large.bmp", 14, 15);
     fontNumLarge.m_NumbersOnly = true;
 
     TextWall operationsText;
@@ -697,33 +691,19 @@ int main(int argc, char* argv[])
         sine.m_panHorizontal = false;
         sine.m_Speed = i > 2 ? 1.0f : 2.0f;
         sine.m_Scroll = (float)(i * 4);
-        SDL_SetSurfaceColorKey(sine.m_Image, true, SDL_MapSurfaceRGB(sine.m_Image, 0, 0, 0));
     }
 
     LoadConfigToMap("values.txt", values);
 
-    if (!init_fb())
-    {
-        return -1;
-    }
 
     bool run = true;
     int frame = 0;
 
     WeatherSat weatherSat;
-    weatherSat.InitWeatherSat(weather, ren);
+    weatherSat.InitWeatherSat(weather);
 
     while (run)
     {
-        SDL_Event e;
-        while (SDL_PollEvent(&e))
-        {
-            if (e.type == SDL_EVENT_QUIT)
-            {
-                run = false;
-            }
-        }
-
         static const int reloadCntMax = 100;
         if (reloadValsCnt == 0)
         {
@@ -731,7 +711,7 @@ int main(int argc, char* argv[])
             LoadConfigToMap("values.txt", values);
             if (weather.UpdateWeatherData())
             {
-                weatherSat.OnWeatherUpdated(ren);
+                weatherSat.OnWeatherUpdated();
             }
 
             if (uselessFact.UpdateUselessFact())
@@ -744,31 +724,33 @@ int main(int argc, char* argv[])
 
 
         // Draw Background
-        if (bg) SDL_BlitSurface(bg, NULL, canvas, NULL);
-        else SDL_FillSurfaceRect(canvas, NULL, SDL_MapSurfaceRGBA(canvas, 20, 20, 40, 255));
+        if (bg)
+        {
+            md_draw_image(*bg, 0, 0);
+        }
 
 
         for (int i = 0; i < numControlStacks; ++i)
         {
-            controlStacks[i].UpdateAndDraw(canvas);
+            controlStacks[i].UpdateAndDraw();
         }
 
         // Update & Draw Clock Text
         int clock_x = 50;
         int clock_y = 70;
-        UpdateClock(clock_x, clock_y, canvas, fontNumLarge);
+        UpdateClock(clock_x, clock_y, fontNumLarge);
 
 
         snprintf(buff, sizeof(buff), "%s", weather.m_CurrentWeatherDesc.c_str());
-        draw_text(canvas, varFont, 50, 110, buff, 1);
+        draw_text(varFont, 50, 110, buff, 1);
 
         snprintf(buff, sizeof(buff), "Current Temp %0.1fC", weather.m_CurrentTemp);
-        draw_text(canvas, varFont, 50, 120, buff, 1);
+        draw_text(varFont, 50, 120, buff, 1);
 
         //snprintf(buff, sizeof(buff), "%0.1fC Min %0.1fC Max", weather.m_TempMin, weather.m_TempMax);
         //draw_text(canvas, varFont, 20, 115, buff, 2);
 
-        weatherSat.DrawWeatherSat(ren, canvas, varFont);
+        weatherSat.DrawWeatherSat(varFont);
 
 
         static int operationsFeedMode = 0;
@@ -785,7 +767,7 @@ int main(int argc, char* argv[])
             //operationsFeed.UpdateFeed(operationsText, values);
             operationsText.Clear();
             operationsText.SetWrappedLine(0, uselessFact.m_UselessFact.c_str());
-            operationsText.DrawTextWall(canvas, SDL_Color{255, 255, 255, 255});
+            operationsText.DrawTextWall(255, 255, 255);
         }
         else
         {
@@ -796,13 +778,13 @@ int main(int argc, char* argv[])
             c += 0.05f;
             drawSpinningCube(operationsText.m_Text, operationsText.m_CharW, operationsText.m_CharH, a, b, c);
 
-            operationsText.DrawTextWall(canvas, SDL_Color{ 0, 255, 255, 255 });
+            operationsText.DrawTextWall(0, 255, 255);
         }
 
-        topological.UpdateAndDrawPanningImage(ren, canvas);
+        topological.UpdateAndDrawPanningImage();
         for (int i = 0; i < num_sine; ++i)
         {
-            sines[i].UpdateAndDrawPanningImage(ren, canvas);
+            sines[i].UpdateAndDrawPanningImage();
         }
 
         // Chance of a cell change
@@ -818,42 +800,46 @@ int main(int argc, char* argv[])
             {
                 continue;
             }
-            SDL_Rect dst = { reactorCells[i].x, reactorCells[i].y, 16, 16 };
-            SDL_BlitSurface(reactor_red, NULL, canvas, &dst);
+            md_draw_image(*reactor_red, reactorCells[i].x, reactorCells[i].y);
         }
 
         {
-            SDL_SetSurfaceColorMod(reactor_red, (unsigned char)(255 * reloadValsT), (unsigned char)(255 * reloadValsT), (unsigned char)(255 * reloadValsT));
-            SDL_Rect dst = { reactorCells[0].x, reactorCells[0].y, 16, 16 };
-            SDL_BlitSurface(reactor_red, NULL, canvas, &dst);
-            SDL_SetSurfaceColorMod(reactor_red, 255, 255, 255);
+            md_set_colour_mod(*reactor_red, (unsigned char)(255 * reloadValsT), (unsigned char)(255 * reloadValsT), (unsigned char)(255 * reloadValsT));
+            md_draw_image(*reactor_red, reactorCells[0].x, reactorCells[0].y);
+            md_set_colour_mod(*reactor_red, 255, 255, 255);
         }
 
+
+        md_render();
         
-        SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
-        SDL_RenderClear(ren);
-        //SDL_RenderCopy(ren, screen_tex, NULL, NULL);
-        SDL_UpdateTexture(screen_tex, NULL, canvas->pixels, canvas->pitch);
-        SDL_RenderTexture(ren, screen_tex, nullptr, nullptr);
+        //SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
+        //SDL_RenderClear(ren);
+        ////SDL_RenderCopy(ren, screen_tex, NULL, NULL);
+        //SDL_UpdateTexture(screen_tex, NULL, canvas->pixels, canvas->pitch);
+        //SDL_RenderTexture(ren, screen_tex, nullptr, nullptr);
 
-        // 4. Update Display
-        blit_to_fb(canvas);
+        //// 4. Update Display
+        //blit_to_fb(canvas);
 
-        //static SDL_Rect blockout;
-        //blockout.x = 13;
-        //blockout.y = 250;
-        //blockout.w = 134;
-        //blockout.h = 121;
-        //SDL_SetRenderDrawColor(ren, 100, 0, 0, 255);
-        //SDL_RenderFillRect(ren, &blockout);
+        ////static MD_Rect blockout;
+        ////blockout.x = 13;
+        ////blockout.y = 250;
+        ////blockout.w = 134;
+        ////blockout.h = 121;
+        ////SDL_SetRenderDrawColor(ren, 100, 0, 0, 255);
+        ////SDL_RenderFillRect(ren, &blockout);
 
-        SDL_RenderPresent(ren);
+        //SDL_RenderPresent(ren);
+
+        run = md_exit_raised() == false;
     }
 
     // TODO more
-    SDL_DestroySurface(monoFont.m_Surface);
-    SDL_DestroySurface(varFont.m_Surface);
-    SDL_DestroySurface(fontNumLarge.m_Surface);
-    SDL_Quit();
+    //SDL_DestroySurface(monoFont.m_Surface);
+    //SDL_DestroySurface(varFont.m_Surface);
+   // SDL_DestroySurface(fontNumLarge.m_Surface);
+    //SDL_Quit();
+
+    md_deinit();
     return 0;
 }
