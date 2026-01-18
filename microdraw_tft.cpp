@@ -38,6 +38,14 @@ void blit_to_fb() {
     //SDL_Delay(1000 / FB_FPS_LIMIT);
 }
 
+class MD_TFT_Image
+{
+public:
+    int32_t w = 0;
+    int32_t h = 0;
+    uint16_t key = 0;
+};
+
 struct MicroDrawContext
 {
     TFT_eSPI* tft = nullptr;
@@ -121,11 +129,18 @@ int md_get_image_height_impl(const MD_Image& image)
 
 bool md_draw_image_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
 {
+    MD_TFT_Image& tftImage = *(MD_TFT_Image*)&image;
     //SDL_Surface* sdl_src = (SDL_Surface*)&image;
     //SDL_Rect* sdl_srcRect = (SDL_Rect*)srcRect;
     //SDL_Surface* sdl_dest = dest == nullptr ? context.canvas : (SDL_Surface*)dest;
     //SDL_Rect* sdl_destRect = (SDL_Rect*)destRect;
     //SDL_BlitSurface(sdl_src, sdl_srcRect, sdl_dest, sdl_destRect);
+    const int32_t x = dest == nullptr ? 0 : destRect->x;
+    const int32_t y = dest == nullptr ? 0 : destRect->y;
+    const uint16_t* data = nullptr;
+    // for 1 colour sprites?
+    //context.tft->drawBitmap(x, y, bitmap, w, h,)
+    context.tft->pushImage(x, y, tftImage.w, tftImage.h, data, tftImage.key);
     return true;
 }
 
@@ -141,12 +156,12 @@ bool md_draw_image_scaled_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest
 
 void md_filled_rect_impl(MD_Rect& rect, uint8_t r, uint8_t g, uint8_t b)
 {
-    //SDL_Rect* sdl_rect = (SDL_Rect*)&rect;
-    //SDL_FillSurfaceRect(context.canvas, sdl_rect, SDL_MapSurfaceRGB(context.canvas, r, g, b));
+    context.tft->fillRect(rect.x, rect.y, rect.w, rect.h, context.tft->color565(r, g, b));
 }
 
 void md_set_image_clip_impl(MD_Image& image, MD_Rect* rect)
 {
+
     //SDL_Surface* sdl_src = (SDL_Surface*)&image;
     //SDL_Rect* sdl_clipRect = (SDL_Rect*)rect;
     //SDL_SetSurfaceClipRect(sdl_src, sdl_clipRect);
