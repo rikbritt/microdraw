@@ -564,3 +564,85 @@ const char* JSONVal::GetAsString() const
 
     return m_value->c_str();
 }
+
+
+
+
+
+/**
+ * Converts HSL color values to SDL_Color (RGBA).
+ * @param h Hue in degrees [0.0, 360.0]
+ * @param s Saturation percentage [0.0, 1.0]
+ * @param l Lightness percentage [0.0, 1.0]
+ * @param a Alpha value [0, 255] (defaults to 255)
+ */
+MD_Color HSLToSDLColor(float h, float s, float l, uint8_t a)
+{
+    // Clamp values to ensure they are in range
+    h = fmod(h, 360.0f);
+    if (h < 0) h += 360.0f;
+    s = std::clamp(s, 0.0f, 1.0f);
+    l = std::clamp(l, 0.0f, 1.0f);
+
+    float c = (1.0f - std::abs(2.0f * l - 1.0f)) * s; // Chroma
+    float x = c * (1.0f - std::abs(fmod(h / 60.0f, 2.0f) - 1.0f));
+    float m = l - c / 2.0f;
+
+    float r_tmp = 0, g_tmp = 0, b_tmp = 0;
+
+    if (h < 60) { r_tmp = c; g_tmp = x; b_tmp = 0; }
+    else if (h < 120) { r_tmp = x; g_tmp = c; b_tmp = 0; }
+    else if (h < 180) { r_tmp = 0; g_tmp = c; b_tmp = x; }
+    else if (h < 240) { r_tmp = 0; g_tmp = x; b_tmp = c; }
+    else if (h < 300) { r_tmp = x; g_tmp = 0; b_tmp = c; }
+    else { r_tmp = c; g_tmp = 0; b_tmp = x; }
+
+    MD_Color color;
+    color.r = static_cast<uint8_t>((r_tmp + m) * 255);
+    color.g = static_cast<uint8_t>((g_tmp + m) * 255);
+    color.b = static_cast<uint8_t>((b_tmp + m) * 255);
+    color.a = a;
+
+    return color;
+}
+
+int LerpInt(float t, int from, int to)
+{
+    const int out = ((to - from) * t) + from;
+    return out;
+}
+
+
+
+/**
+ * Loads key=value pairs into an existing map.
+ * @param filename The path to the file as a C-string.
+ * @param configMap Reference to the map where data will be stored.
+ */
+void LoadConfigToMap(const char* filename, Values& configMap)
+{
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file " << filename << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line))
+    {
+        // Skip empty lines to prevent errors
+        if (line.empty()) continue;
+
+        size_t delimiterPos = line.find('=');
+
+        if (delimiterPos != std::string::npos) {
+            std::string key = line.substr(0, delimiterPos);
+            std::string value = line.substr(delimiterPos + 1);
+
+            configMap[key] = value;
+        }
+    }
+
+    file.close();
+}

@@ -412,7 +412,7 @@ public:
 
         for (int i = 0; i < m_StackSize; ++i)
         {
-            SDL_Color col = m_OnColour;
+            MD_Color col = m_OnColour;
             if (i < m_NumActive)
             {
                 const float t = (float)i / (float)m_NumActive;
@@ -437,8 +437,8 @@ public:
     int m_NumActive = 0;
     int m_Trend = 0;
     //bool* m_State = nullptr;
-    SDL_Color m_OnColour = { 0, 255, 48 };
-    SDL_Color m_OffColour = { 255, 0, 0 };
+    MD_Color m_OnColour = { 0, 255, 48 };
+    MD_Color m_OffColour = { 255, 0, 0 };
 };
 
 struct ReactorCell
@@ -453,7 +453,7 @@ class Gradient
 public:
     ~Gradient();
     void Reset();
-    void InitGradient(SDL_Color startColor, SDL_Color endColor, const MD_Rect& dstRect);
+    void InitGradient(MD_Color startColor, MD_Color endColor, const MD_Rect& dstRect);
     void RenderGradient();
     MD_Image* m_Surface = nullptr;
     MD_Rect m_Rect{ 0,0,0,0 };
@@ -470,7 +470,7 @@ void Gradient::Reset()
     m_Surface = nullptr;
 }
 
-void Gradient::InitGradient(SDL_Color startColor, SDL_Color endColor, const MD_Rect& dstRect)
+void Gradient::InitGradient(MD_Color startColor, MD_Color endColor, const MD_Rect& dstRect)
 {
     if (m_Surface)
     {
@@ -489,10 +489,10 @@ void Gradient::InitGradient(SDL_Color startColor, SDL_Color endColor, const MD_R
         float t = (float)y / (float)(height - 1);
 
         // 3. Interpolate R, G, B, and A channels
-        Uint8 r = (Uint8)(startColor.r + t * (endColor.r - startColor.r));
-        Uint8 g = (Uint8)(startColor.g + t * (endColor.g - startColor.g));
-        Uint8 b = (Uint8)(startColor.b + t * (endColor.b - startColor.b));
-        Uint8 a = (Uint8)(startColor.a + t * (endColor.a - startColor.a));
+        uint8_t r = (uint8_t)(startColor.r + t * (endColor.r - startColor.r));
+        uint8_t g = (uint8_t)(startColor.g + t * (endColor.g - startColor.g));
+        uint8_t b = (uint8_t)(startColor.b + t * (endColor.b - startColor.b));
+        uint8_t a = (uint8_t)(startColor.a + t * (endColor.a - startColor.a));
 
         // 4. Map the color to the surface format and store it
         md_draw_pixel_to_image(*surface, 0, y, r, g, b);
@@ -504,7 +504,7 @@ void Gradient::RenderGradient()
     md_draw_image_scaled(*m_Surface, m_Rect);
 }
 
-SDL_Color TempToColor(float temp)
+MD_Color TempToColor(float temp)
 {
     struct TempAndCol
     {
@@ -553,7 +553,7 @@ SDL_Color TempToColor(float temp)
     float s = a.m_Saturation + t * (b.m_Saturation - a.m_Saturation);
     float l = a.m_Lightness + t * (b.m_Lightness - a.m_Lightness);
 
-    // 4. Convert the interpolated HSL to SDL_Color
+    // 4. Convert the interpolated HSL to MD_Color
     return HSLToSDLColor(h, s, l);
 }
 

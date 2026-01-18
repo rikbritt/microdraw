@@ -2,8 +2,6 @@
 
 #include <inttypes.h>
 
-class Font;
-
 struct MD_Image;
 struct MD_Rect;
 
@@ -25,3 +23,4 @@ void md_set_colour_mod_impl(MD_Image& image, uint8_t key_r, uint8_t key_g, uint8
 void md_get_pixel_x_bounds_impl(MD_Image& image, const MD_Rect& rect, int& xLeftOut, int& xRightOut);
 void md_render_impl();
 bool md_exit_raised_impl();
+

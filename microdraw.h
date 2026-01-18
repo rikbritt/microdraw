@@ -12,6 +12,14 @@ struct MD_Rect
     int w, h;
 };
 
+struct MD_Color
+{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t a;
+};
+
 bool md_init(int width, int height);
 void md_deinit();
 MD_Image* md_load_image(const char* filename);
@@ -113,6 +121,17 @@ public:
 
 
 
+/**
+ * Converts HSL color values to SDL_Color (RGBA).
+ * @param h Hue in degrees [0.0, 360.0]
+ * @param s Saturation percentage [0.0, 1.0]
+ * @param l Lightness percentage [0.0, 1.0]
+ * @param a Alpha value [0, 255] (defaults to 255)
+ */
+MD_Color HSLToSDLColor(float h, float s, float l, uint8_t a = 255);
+int LerpInt(float t, int from, int to);
+
+
 struct JSONVal
 {
     ~JSONVal()
@@ -138,3 +157,9 @@ protected:
 
 bool ParseJSON(const char* json, JSONVal& jsonDocOut);
 bool ParseJSONFile(const char* filename, JSONVal& jsonDocOut);
+
+
+
+
+typedef std::map<std::string, std::string> Values;
+void LoadConfigToMap(const char* filename, Values& configMap);

@@ -1,4 +1,5 @@
 #include "microdraw_sdl.h"
+
 #include "microdraw.h"
 
 #include <fstream>
@@ -54,6 +55,46 @@ void md_deinit_impl()
     // clear context
     SDL_Quit();
 }
+
+
+typedef struct {
+    int fb_fd;
+    unsigned short* fbp;
+    int xres;
+} FBInfo;
+
+
+FBInfo fb_info = { -1, NULL, 0 };
+
+bool init_fb() {
+#ifdef __linux__
+    fb_info.fb_fd = open("/dev/fb1", O_RDWR);
+    if (fb_info.fb_fd == -1) return false;
+    struct fb_var_screeninfo vinfo;
+    if (ioctl(fb_info.fb_fd, FBIOGET_VSCREENINFO, &vinfo) == -1) return false;
+    fb_info.xres = vinfo.xres;
+    fb_info.fbp = (unsigned short*)mmap(0, vinfo.xres * vinfo.yres * 2, PROT_READ | PROT_WRITE, MAP_SHARED, fb_info.fb_fd, 0);
+    return true;
+#endif
+    return true;
+}
+
+void blit_to_fb(SDL_Surface* surf) {
+#ifdef __linux__
+    if (!fb_info.fbp) return;
+    Uint32* p = (Uint32*)surf->pixels;
+    for (int y = 0; y < surf->h; y++) {
+        for (int x = 0; x < surf->w; x++) {
+            Uint32 c = p[y * surf->w + x];
+            fb_info.fbp[y * fb_info.xres + x] = ((c >> 19) << 11) | (((c >> 10) & 0x3F) << 5) | (c >> 3 & 0x1F);
+        }
+    }
+#else
+    SDL_Delay(1000 / FB_FPS_LIMIT);
+#endif
+}
+
+
 
 MD_Image* md_load_image_impl(const char* filename)
 {
@@ -241,93 +282,11 @@ void md_render_impl()
     }
 }
 
-typedef struct {
-    int fb_fd;
-    unsigned short* fbp;
-    int xres;
-} FBInfo;
-
-SDL_Surface* LoadBMPWithColorKey(const char* bmpName, SDL_PixelFormat format)
-{
-    SDL_Surface* temp = SDL_LoadBMP(bmpName);
-
-    // Force the bmp into the EXACT same format as our canvas (32-bit ARGB/XRGB)
-    SDL_Surface* bmp = SDL_ConvertSurface(temp, format);
-    SDL_DestroySurface(temp);
-
-    // Re-apply transparency on the NEW surface
-    SDL_SetSurfaceColorKey(bmp, true, SDL_MapSurfaceRGB(bmp, 0, 0, 0));
-    return bmp;
-}
-
-
-/**
- * Loads key=value pairs into an existing map.
- * @param filename The path to the file as a C-string.
- * @param configMap Reference to the map where data will be stored.
- */
-void LoadConfigToMap(const char* filename, Values& configMap)
-{
-    std::ifstream file(filename);
-
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open file " << filename << std::endl;
-        return;
-    }
-
-    std::string line;
-    while (std::getline(file, line))
-    {
-        // Skip empty lines to prevent errors
-        if (line.empty()) continue;
-
-        size_t delimiterPos = line.find('=');
-
-        if (delimiterPos != std::string::npos) {
-            std::string key = line.substr(0, delimiterPos);
-            std::string value = line.substr(delimiterPos + 1);
-
-            configMap[key] = value;
-        }
-    }
-
-    file.close();
-}
-
 bool md_exit_raised_impl()
 {
     return sdlContext.exit_raised;
 }
 
-FBInfo fb_info = { -1, NULL, 0 };
-
-bool init_fb() {
-#ifdef __linux__
-    fb_info.fb_fd = open("/dev/fb1", O_RDWR);
-    if (fb_info.fb_fd == -1) return false;
-    struct fb_var_screeninfo vinfo;
-    if (ioctl(fb_info.fb_fd, FBIOGET_VSCREENINFO, &vinfo) == -1) return false;
-    fb_info.xres = vinfo.xres;
-    fb_info.fbp = (unsigned short*)mmap(0, vinfo.xres * vinfo.yres * 2, PROT_READ | PROT_WRITE, MAP_SHARED, fb_info.fb_fd, 0);
-    return true;
-#endif
-    return true;
-}
-
-void blit_to_fb(SDL_Surface* surf) {
-#ifdef __linux__
-    if (!fb_info.fbp) return;
-    Uint32* p = (Uint32*)surf->pixels;
-    for (int y = 0; y < surf->h; y++) {
-        for (int x = 0; x < surf->w; x++) {
-            Uint32 c = p[y * surf->w + x];
-            fb_info.fbp[y * fb_info.xres + x] = ((c >> 19) << 11) | (((c >> 10) & 0x3F) << 5) | (c >> 3 & 0x1F);
-        }
-    }
-#else
-    SDL_Delay(1000 / FB_FPS_LIMIT);
-#endif
-}
 
 
 
@@ -335,49 +294,3 @@ void blit_to_fb(SDL_Surface* surf) {
 
 
 
-
-
-
-
-/**
- * Converts HSL color values to SDL_Color (RGBA).
- * @param h Hue in degrees [0.0, 360.0]
- * @param s Saturation percentage [0.0, 1.0]
- * @param l Lightness percentage [0.0, 1.0]
- * @param a Alpha value [0, 255] (defaults to 255)
- */
-SDL_Color HSLToSDLColor(float h, float s, float l, Uint8 a) 
-{
-    // Clamp values to ensure they are in range
-    h = fmod(h, 360.0f);
-    if (h < 0) h += 360.0f;
-    s = std::clamp(s, 0.0f, 1.0f);
-    l = std::clamp(l, 0.0f, 1.0f);
-
-    float c = (1.0f - std::abs(2.0f * l - 1.0f)) * s; // Chroma
-    float x = c * (1.0f - std::abs(fmod(h / 60.0f, 2.0f) - 1.0f));
-    float m = l - c / 2.0f;
-
-    float r_tmp = 0, g_tmp = 0, b_tmp = 0;
-
-    if (h < 60) { r_tmp = c; g_tmp = x; b_tmp = 0; }
-    else if (h < 120) { r_tmp = x; g_tmp = c; b_tmp = 0; }
-    else if (h < 180) { r_tmp = 0; g_tmp = c; b_tmp = x; }
-    else if (h < 240) { r_tmp = 0; g_tmp = x; b_tmp = c; }
-    else if (h < 300) { r_tmp = x; g_tmp = 0; b_tmp = c; }
-    else { r_tmp = c; g_tmp = 0; b_tmp = x; }
-
-    SDL_Color color;
-    color.r = static_cast<Uint8>((r_tmp + m) * 255);
-    color.g = static_cast<Uint8>((g_tmp + m) * 255);
-    color.b = static_cast<Uint8>((b_tmp + m) * 255);
-    color.a = a;
-
-    return color;
-}
-
-int LerpInt(float t, int from, int to)
-{
-    const int out = ((to - from) * t) + from;
-    return out;
-}

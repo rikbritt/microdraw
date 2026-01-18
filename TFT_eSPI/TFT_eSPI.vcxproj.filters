@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\User_Setups">
+      <UniqueIdentifier>{e3efe89f-3296-4e5a-89e3-cd90f0cd2897}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Fonts">
+      <UniqueIdentifier>{9d29757c-694b-4205-9efb-7011caf43bb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TFT_Drivers">
+      <UniqueIdentifier>{d2be419d-f8ee-4964-b88f-f131ba406d00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Fonts\TrueType">
+      <UniqueIdentifier>{afa9bb2c-f340-459b-9980-90ed32577b1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Fonts\GFXFF">
+      <UniqueIdentifier>{aba7ac31-2174-4c65-9223-bbf704970746}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Fonts\Custom">
+      <UniqueIdentifier>{6c91b0d9-5581-42c4-81d2-84960a8c47a2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="TFT_eSPI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Fonts\Font7srle.c">
+      <Filter>Source Files\Fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="Fonts\Font16.c">
+      <Filter>Source Files\Fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="Fonts\Font32rle.c">
+      <Filter>Source Files\Fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="Fonts\Font64rle.c">
+      <Filter>Source Files\Fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="Fonts\Font72rle.c">
+      <Filter>Source Files\Fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="Fonts\glcdfont.c">
+      <Filter>Source Files\Fonts</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TFT_eSPI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\Font7srle.h">
+      <Filter>Source Files\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\Font16.h">
+      <Filter>Source Files\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\Font32rle.h">
+      <Filter>Source Files\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\Font64rle.h">
+      <Filter>Source Files\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\Font72rle.h">
+      <Filter>Source Files\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\GFXFF\GFXFF.h">
+      <Filter>Source Files\Fonts\GFXFF</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\Custom\Orbitron_Light_24.h">
+      <Filter>Source Files\Fonts\Custom</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\Custom\Orbitron_Light_32.h">
+      <Filter>Source Files\Fonts\Custom</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\Custom\Roboto_Thin_24.h">
+      <Filter>Source Files\Fonts\Custom</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\Custom\Satisfy_24.h">
+      <Filter>Source Files\Fonts\Custom</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts\Custom\Yellowtail_32.h">
+      <Filter>Source Files\Fonts\Custom</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\GC9A01A_Rotation.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ILI9481_Defines.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ILI9481_Init.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ILI9481_Rotation.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ILI9488_Defines.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ILI9488_Init.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ILI9488_Rotation.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ST7789_Defines.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ST7789_Init.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ST7789_Rotation.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ST7796_Defines.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ST7796_Init.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\ST7796_Rotation.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\GC9A01A_Defines.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="TFT_Drivers\GC9A01A_Init.h">
+      <Filter>Source Files\TFT_Drivers</Filter>
+    </ClInclude>
+    <ClInclude Include="User_Setups\User_Custom_Fonts.h">
+      <Filter>Source Files\User_Setups</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Fonts\TrueType\Not_yet_supported.txt">
+      <Filter>Source Files\Fonts\TrueType</Filter>
+    </Text>
+    <Text Include="Fonts\GFXFF\license.txt">
+      <Filter>Source Files\Fonts\GFXFF</Filter>
+    </Text>
+    <Text Include="Fonts\GFXFF\print.txt">
+      <Filter>Source Files\Fonts\GFXFF</Filter>
+    </Text>
+  </ItemGroup>
+</Project>
