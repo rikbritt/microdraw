@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TFT_eSPI", "TFT_eSPI\TFT_eS
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "apps", "apps\apps.vcxproj", "{D270CE38-E1B1-4146-B34F-64439D4D370E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImageConverter", "ImageConverter\ImageConverter.vcxproj", "{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug Casio SDL|x64 = Debug Casio SDL|x64
@@ -19,6 +21,8 @@ Global
 		Debug Casio TFT|x86 = Debug Casio TFT|x86
 		Debug Screen1 SDL|x64 = Debug Screen1 SDL|x64
 		Debug Screen1 SDL|x86 = Debug Screen1 SDL|x86
+		ImageConverter|x64 = ImageConverter|x64
+		ImageConverter|x86 = ImageConverter|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
@@ -35,6 +39,9 @@ Global
 		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug Screen1 SDL|x64.Build.0 = Debug SDL|x64
 		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug Screen1 SDL|x86.ActiveCfg = Debug SDL|Win32
 		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug Screen1 SDL|x86.Build.0 = Debug SDL|Win32
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.ImageConverter|x64.ActiveCfg = Release|x64
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.ImageConverter|x86.ActiveCfg = Release|Win32
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.ImageConverter|x86.Build.0 = Release|Win32
 		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x64.ActiveCfg = Release|x64
 		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x64.Build.0 = Release|x64
 		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x86.ActiveCfg = Release|Win32
@@ -51,12 +58,15 @@ Global
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Debug Screen1 SDL|x64.Build.0 = Debug|x64
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Debug Screen1 SDL|x86.ActiveCfg = Debug|Win32
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Debug Screen1 SDL|x86.Build.0 = Debug|Win32
+		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.ImageConverter|x64.ActiveCfg = Release|x64
+		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.ImageConverter|x64.Build.0 = Release|x64
+		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.ImageConverter|x86.ActiveCfg = Release|Win32
+		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.ImageConverter|x86.Build.0 = Release|Win32
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|x64.ActiveCfg = Release|x64
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|x64.Build.0 = Release|x64
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|x86.ActiveCfg = Release|Win32
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|x86.Build.0 = Release|Win32
 		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Debug Casio SDL|x64.ActiveCfg = Debug|x64
-		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Debug Casio SDL|x64.Build.0 = Debug|x64
 		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Debug Casio SDL|x86.ActiveCfg = Debug|Win32
 		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Debug Casio SDL|x86.Build.0 = Debug|Win32
 		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Debug Casio TFT|x64.ActiveCfg = Debug|x64
@@ -65,6 +75,9 @@ Global
 		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Debug Screen1 SDL|x64.ActiveCfg = Debug|x64
 		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Debug Screen1 SDL|x86.ActiveCfg = Debug|Win32
 		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Debug Screen1 SDL|x86.Build.0 = Debug|Win32
+		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.ImageConverter|x64.ActiveCfg = Release|x64
+		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.ImageConverter|x86.ActiveCfg = Release|Win32
+		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.ImageConverter|x86.Build.0 = Release|Win32
 		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Release|x64.ActiveCfg = Release|x64
 		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Release|x64.Build.0 = Release|x64
 		{15800509-ADCD-4318-86D1-FC6F76A30A5E}.Release|x86.ActiveCfg = Release|Win32
@@ -81,10 +94,30 @@ Global
 		{D270CE38-E1B1-4146-B34F-64439D4D370E}.Debug Screen1 SDL|x64.Build.0 = Debug Screen 1|x64
 		{D270CE38-E1B1-4146-B34F-64439D4D370E}.Debug Screen1 SDL|x86.ActiveCfg = Debug Screen 1|Win32
 		{D270CE38-E1B1-4146-B34F-64439D4D370E}.Debug Screen1 SDL|x86.Build.0 = Debug Screen 1|Win32
+		{D270CE38-E1B1-4146-B34F-64439D4D370E}.ImageConverter|x64.ActiveCfg = Release|x64
+		{D270CE38-E1B1-4146-B34F-64439D4D370E}.ImageConverter|x86.ActiveCfg = Release|Win32
+		{D270CE38-E1B1-4146-B34F-64439D4D370E}.ImageConverter|x86.Build.0 = Release|Win32
 		{D270CE38-E1B1-4146-B34F-64439D4D370E}.Release|x64.ActiveCfg = Release|x64
 		{D270CE38-E1B1-4146-B34F-64439D4D370E}.Release|x64.Build.0 = Release|x64
 		{D270CE38-E1B1-4146-B34F-64439D4D370E}.Release|x86.ActiveCfg = Release|Win32
 		{D270CE38-E1B1-4146-B34F-64439D4D370E}.Release|x86.Build.0 = Release|Win32
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Debug Casio SDL|x64.ActiveCfg = Debug|x64
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Debug Casio SDL|x86.ActiveCfg = Debug|Win32
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Debug Casio SDL|x86.Build.0 = Debug|Win32
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Debug Casio TFT|x64.ActiveCfg = Debug|x64
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Debug Casio TFT|x86.ActiveCfg = Debug|Win32
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Debug Casio TFT|x86.Build.0 = Debug|Win32
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Debug Screen1 SDL|x64.ActiveCfg = Debug|x64
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Debug Screen1 SDL|x86.ActiveCfg = Debug|Win32
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Debug Screen1 SDL|x86.Build.0 = Debug|Win32
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.ImageConverter|x64.ActiveCfg = Debug|x64
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.ImageConverter|x64.Build.0 = Debug|x64
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.ImageConverter|x86.ActiveCfg = Debug|Win32
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.ImageConverter|x86.Build.0 = Debug|Win32
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Release|x64.ActiveCfg = Release|x64
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Release|x64.Build.0 = Release|x64
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Release|x86.ActiveCfg = Release|Win32
+		{A6E6BD97-DFA7-4988-AB9D-569E6E2082BA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
