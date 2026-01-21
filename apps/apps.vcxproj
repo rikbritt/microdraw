@@ -199,6 +199,10 @@
       <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="casio\casio.h" />
+    <ClInclude Include="casio\large_lcd_numbers.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
