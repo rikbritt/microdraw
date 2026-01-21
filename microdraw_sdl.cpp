@@ -99,20 +99,12 @@ void blit_to_fb(SDL_Surface* surf) {
 MD_Image* md_load_image_impl(const char* filename)
 {
     SDL_Surface* image = SDL_LoadBMP(filename);
-    if (!image)
-    {
-        image = SDL_LoadPNG(filename);
-    }
     return (MD_Image*)image;
 }
 
 MD_Image* md_load_image_with_key_impl(const char* filename, uint8_t key_r, uint8_t key_g, uint8_t key_b)
 {
     SDL_Surface* temp_font = SDL_LoadBMP(filename);
-    if (!temp_font)
-    {
-        temp_font = SDL_LoadPNG(filename);
-    }
     SDL_PixelFormat format = sdlContext.canvas->format;
 
     // Force the font into the EXACT same format as our canvas (32-bit ARGB/XRGB)
