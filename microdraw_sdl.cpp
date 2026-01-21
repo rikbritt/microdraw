@@ -31,32 +31,6 @@ struct MicroDrawContext
 
 MicroDrawContext sdlContext;
 
-bool md_init_impl(int width, int height)
-{
-    SDL_Init(SDL_INIT_VIDEO);
-    sdlContext.win = SDL_CreateWindow("Pi Display", width, height, 0);
-    sdlContext.ren = SDL_CreateRenderer(sdlContext.win, nullptr);
-
-
-    // 1. Create the Surface for drawing (CPU side)
-    sdlContext.canvas = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_XRGB8888);
-
-    // 2. Create ONE Texture (GPU side) - Do this BEFORE the loop
-    sdlContext.screen_tex = SDL_CreateTexture(sdlContext.ren,
-        SDL_PIXELFORMAT_XRGB8888,
-        SDL_TEXTUREACCESS_STREAMING,
-        width, height);
-    return true;
-}
-
-void md_deinit_impl()
-{
-    // TODO - leaks
-    // clear context
-    SDL_Quit();
-}
-
-
 typedef struct {
     int fb_fd;
     unsigned short* fbp;
@@ -78,6 +52,33 @@ bool init_fb() {
 #endif
     return true;
 }
+
+bool md_init_impl(int width, int height)
+{
+    SDL_Init(SDL_INIT_VIDEO);
+    sdlContext.win = SDL_CreateWindow("Pi Display", width, height, 0);
+    sdlContext.ren = SDL_CreateRenderer(sdlContext.win, nullptr);
+
+
+    // 1. Create the Surface for drawing (CPU side)
+    sdlContext.canvas = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_XRGB8888);
+
+    // 2. Create ONE Texture (GPU side) - Do this BEFORE the loop
+    sdlContext.screen_tex = SDL_CreateTexture(sdlContext.ren,
+        SDL_PIXELFORMAT_XRGB8888,
+        SDL_TEXTUREACCESS_STREAMING,
+        width, height);
+
+    return init_fb();
+}
+
+void md_deinit_impl()
+{
+    // TODO - leaks
+    // clear context
+    SDL_Quit();
+}
+
 
 void blit_to_fb(SDL_Surface* surf) {
 #ifdef __linux__
