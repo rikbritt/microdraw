@@ -1,7 +1,8 @@
 #include "microdraw.h"
 
 #define MICRODRAW_SDL
-#include "microdraw_sdl.h"
+#include "casio/casio.h"
+#include "casio/large_lcd_numbers.h"
 
 #include <ctime>
 
@@ -15,9 +16,9 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    MD_Image* bg = md_load_image("casio.png");
+    MD_Image* bg = md_load_image("casio.bmp");
     Font large_lcd_numbers;
-    large_lcd_numbers.InitFont("large_lcd_numbers.png", 22, 55);
+    large_lcd_numbers.InitFont("large_lcd_numbers.bmp", 22, 55);
     large_lcd_numbers.m_NumbersOnly = true;
 
 

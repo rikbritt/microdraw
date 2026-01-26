@@ -59,7 +59,8 @@ int main(int argc, char* argv[]) {
 
     outFile << "#ifndef _" << varName << "_H_\n";
     outFile << "#define _" << varName << "_H_\n\n";
-    outFile << "#include <pgmspace.h>\n\n";
+    outFile << "#include <cinttypes>\n";
+    //outFile << "#include <pgmspace.h>\n\n";
 
     // 2. Define Macros
     std::map<std::vector<uint8_t>, std::string> macroMap;
@@ -75,9 +76,10 @@ int main(int argc, char* argv[]) {
         outFile << "\"\n";
     }
 
+    outFile << std::dec;
     outFile << "\nconst uint16_t " << varName << "_width  = " << target->w << ";\n";
     outFile << "const uint16_t " << varName << "_height = " << target->h << ";\n\n";
-    outFile << "const char " << varName << "_data[] PROGMEM = \n  ";
+    outFile << "const char " << varName << "_data[] = \n  ";
 
     // 3. Optimized Output Generation
     std::string rawBuffer = "";

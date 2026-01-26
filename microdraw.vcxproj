@@ -202,7 +202,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="microdraw.h" />
-    <ClInclude Include="microdraw_sdl.h" />
     <ClInclude Include="microdraw_tft.h" />
   </ItemGroup>
   <ItemGroup>

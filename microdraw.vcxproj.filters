@@ -32,8 +32,5 @@
     <ClInclude Include="microdraw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="microdraw_sdl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

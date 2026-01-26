@@ -1,5 +1,3 @@
-#include "microdraw_sdl.h"
-
 #include "microdraw.h"
 
 #include <fstream>
@@ -53,7 +51,7 @@ bool init_fb() {
     return true;
 }
 
-bool md_init_impl(int width, int height)
+bool md_init(int width, int height)
 {
     SDL_Init(SDL_INIT_VIDEO);
     sdlContext.win = SDL_CreateWindow("Pi Display", width, height, 0);
@@ -72,7 +70,7 @@ bool md_init_impl(int width, int height)
     return init_fb();
 }
 
-void md_deinit_impl()
+void md_deinit()
 {
     // TODO - leaks
     // clear context
@@ -97,13 +95,13 @@ void blit_to_fb(SDL_Surface* surf) {
 
 
 
-MD_Image* md_load_image_impl(const char* filename)
+MD_Image* md_load_image(const char* filename)
 {
     SDL_Surface* image = SDL_LoadBMP(filename);
     return (MD_Image*)image;
 }
 
-MD_Image* md_load_image_with_key_impl(const char* filename, uint8_t key_r, uint8_t key_g, uint8_t key_b)
+MD_Image* md_load_image_with_key(const char* filename, uint8_t key_r, uint8_t key_g, uint8_t key_b)
 {
     SDL_Surface* temp_font = SDL_LoadBMP(filename);
     SDL_PixelFormat format = sdlContext.canvas->format;
@@ -117,13 +115,13 @@ MD_Image* md_load_image_with_key_impl(const char* filename, uint8_t key_r, uint8
     return (MD_Image*)surface;
 }
 
-MD_Image* md_create_image_impl(int w, int h)
+MD_Image* md_create_image(int w, int h)
 {
     SDL_Surface* new_surface = SDL_CreateSurface(w, h, SDL_PIXELFORMAT_RGBA32);
     return (MD_Image*)new_surface;
 }
 
-void md_draw_pixel_to_image_impl(MD_Image& image, int x, int y, uint8_t r, uint8_t g, uint8_t b)
+void md_draw_pixel_to_image(MD_Image& image, int x, int y, uint8_t r, uint8_t g, uint8_t b)
 {
     SDL_Surface* surface = (SDL_Surface*)&image;
     Uint32* pixels = (Uint32*)surface->pixels;
@@ -131,25 +129,25 @@ void md_draw_pixel_to_image_impl(MD_Image& image, int x, int y, uint8_t r, uint8
     pixels[pixelIdx] = SDL_MapSurfaceRGB(surface, r, g, b);
 }
 
-void md_destroy_image_impl(MD_Image& image)
+void md_destroy_image(MD_Image& image)
 {
     SDL_Surface* sdl_surface = (SDL_Surface*)&image;
     SDL_DestroySurface(sdl_surface);
 }
 
-int md_get_image_width_impl(const MD_Image& image)
+int md_get_image_width(const MD_Image& image)
 {
     const SDL_Surface* sdl_src = (const SDL_Surface*)&image;
     return sdl_src->w;
 }
 
-int md_get_image_height_impl(const MD_Image& image)
+int md_get_image_height(const MD_Image& image)
 {
     const SDL_Surface* sdl_src = (const SDL_Surface*)&image;
     return sdl_src->h;
 }
 
-bool md_draw_image_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
+bool md_draw_image(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
 {
     SDL_Surface* sdl_src = (SDL_Surface*)&image;
     SDL_Rect* sdl_srcRect = (SDL_Rect*)srcRect;
@@ -159,7 +157,23 @@ bool md_draw_image_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Re
     return true;
 }
 
-bool md_draw_image_scaled_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
+bool md_draw_image(MD_Image& image, int x, int y)
+{
+    MD_Rect destRect{ x, y, md_get_image_width(image), md_get_image_height(image) };
+    return md_draw_image(image, nullptr, nullptr, &destRect);
+}
+
+bool md_draw_image(MD_Image& image, MD_Rect& src, MD_Rect& dest)
+{
+    return md_draw_image(image, &src, nullptr, &dest);
+}
+
+bool md_draw_image(MD_Image& image)
+{
+    return md_draw_image(image, nullptr, nullptr, nullptr);
+}
+
+bool md_draw_image_scaled(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
 {
     SDL_Surface* sdl_src = (SDL_Surface*)&image;
     SDL_Rect* sdl_srcRect = (SDL_Rect*)srcRect;
@@ -169,31 +183,51 @@ bool md_draw_image_scaled_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest
     return true;
 }
 
-void md_filled_rect_impl(MD_Rect& rect, uint8_t r, uint8_t g, uint8_t b)
+bool md_draw_image_scaled(MD_Image& image, MD_Rect& src, MD_Rect& dest)
+{
+    return md_draw_image_scaled(image, &src, nullptr, &dest);
+}
+
+bool md_draw_image_scaled(MD_Image& image, MD_Rect& dest)
+{
+    return md_draw_image_scaled(image, nullptr, nullptr, &dest);
+}
+
+void md_filled_rect(MD_Rect& rect, uint8_t r, uint8_t g, uint8_t b)
 {
     SDL_Rect* sdl_rect = (SDL_Rect*)&rect;
     SDL_FillSurfaceRect(sdlContext.canvas, sdl_rect, SDL_MapSurfaceRGB(sdlContext.canvas, r, g, b));
 }
 
-void md_set_image_clip_impl(MD_Image& image, MD_Rect* rect)
+void md_set_image_clip(MD_Image& image, MD_Rect* rect)
 {
     SDL_Surface* sdl_src = (SDL_Surface*)&image;
     SDL_Rect* sdl_clipRect = (SDL_Rect*)rect;
     SDL_SetSurfaceClipRect(sdl_src, sdl_clipRect);
 }
 
-void md_set_clip_impl(MD_Rect* rect)
+void md_set_clip(MD_Rect* rect)
 {
-    md_set_image_clip_impl(*(MD_Image*)sdlContext.canvas, rect);
+    md_set_image_clip(*(MD_Image*)sdlContext.canvas, rect);
 }
 
-void md_set_colour_mod_impl(MD_Image& image, uint8_t key_r, uint8_t key_g, uint8_t key_b)
+void md_set_clip(MD_Rect& rect)
+{
+    md_set_clip(&rect);
+}
+
+void md_clear_clip()
+{
+    md_set_clip(nullptr);
+}
+
+void md_set_colour_mod(MD_Image& image, uint8_t key_r, uint8_t key_g, uint8_t key_b)
 {
     SDL_SetSurfaceColorMod((SDL_Surface*)&image, key_r, key_g, key_b);
 }
 
 //void GetPixelXBounds(SDL_Surface* surface, SDL_Rect rect, int& xLeftOut, int& xRightOut)
-void md_get_pixel_x_bounds_impl(MD_Image& image, const MD_Rect& rect, int& xLeftOut, int& xRightOut)
+void md_get_pixel_x_bounds(MD_Image& image, const MD_Rect& rect, int& xLeftOut, int& xRightOut)
 {
     SDL_Surface* surface = (SDL_Surface*)&image;
 
@@ -243,7 +277,7 @@ void md_get_pixel_x_bounds_impl(MD_Image& image, const MD_Rect& rect, int& xLeft
     }
 }
 
-void md_render_impl()
+void md_render()
 {
     SDL_SetRenderDrawColor(sdlContext.ren, 255, 255, 255, 255);
     SDL_RenderClear(sdlContext.ren);
@@ -275,7 +309,7 @@ void md_render_impl()
     }
 }
 
-bool md_exit_raised_impl()
+bool md_exit_raised()
 {
     return sdlContext.exit_raised;
 }
