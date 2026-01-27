@@ -16,9 +16,9 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    MD_Image* bg = md_load_image("casio.bmp");
+    MD_Image* bg = md_load_image_from_565_data(casio_data, casio_width, casio_height);
     Font large_lcd_numbers;
-    large_lcd_numbers.InitFont("large_lcd_numbers.bmp", 22, 55);
+    large_lcd_numbers.InitFontFromImageData(large_lcd_numbers_data, large_lcd_numbers_width, large_lcd_numbers_height, 22, 55);
     large_lcd_numbers.m_NumbersOnly = true;
 
 

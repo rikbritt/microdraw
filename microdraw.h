@@ -27,6 +27,8 @@ MD_Image* md_load_image(const char* filename);
 
 // Load image with transparent colour key
 MD_Image* md_load_image_with_key(const char* filename, uint8_t key_r, uint8_t key_g, uint8_t key_b);
+MD_Image* md_load_image_from_565_data_with_key(const char* data, int width, int height, uint8_t key_r, uint8_t key_g, uint8_t key_b);
+MD_Image* md_load_image_from_565_data(const char* data, int width, int height);
 MD_Image* md_create_image(int w, int h);
 void md_destroy_image(MD_Image& image);
 void md_draw_pixel_to_image(MD_Image& image, int x, int y, uint8_t r, uint8_t g, uint8_t b);
@@ -48,7 +50,8 @@ bool md_exit_raised();
 class Font
 {
 public:
-    void InitFont(const char* bmpName, int w, int h);
+    void InitFont(const char* bmpName, int glyphWidth, int glyphHeight);
+    void InitFontFromImageData(const char* data, int w, int h, int glyphWidth, int glyphHeight);
     void MakeVariableWidth();
 
     int GetGlyphWidth(char c) const;

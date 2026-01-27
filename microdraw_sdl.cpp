@@ -111,8 +111,23 @@ MD_Image* md_load_image_with_key(const char* filename, uint8_t key_r, uint8_t ke
     SDL_DestroySurface(temp_font);
 
     // Re-apply transparency on the NEW surface
-    SDL_SetSurfaceColorKey(surface, true, SDL_MapSurfaceRGB(surface, 0, 0, 0));
+    SDL_SetSurfaceColorKey(surface, true, SDL_MapSurfaceRGB(surface, key_r, key_g, key_b));
     return (MD_Image*)surface;
+}
+
+MD_Image* md_load_image_from_565_data_with_key(const char* data, int width, int height, uint8_t key_r, uint8_t key_g, uint8_t key_b)
+{
+    SDL_Surface* new_surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGB565);
+    memcpy(new_surface->pixels, data, width * height * 2);
+    SDL_SetSurfaceColorKey(new_surface, true, SDL_MapSurfaceRGB(new_surface, key_r, key_g, key_b));
+    return (MD_Image*)new_surface;
+}
+
+MD_Image* md_load_image_from_565_data(const char* data, int width, int height)
+{
+    SDL_Surface* new_surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGB565);
+    memcpy(new_surface->pixels, data, width * height * 2);
+    return (MD_Image*)new_surface;
 }
 
 MD_Image* md_create_image(int w, int h)

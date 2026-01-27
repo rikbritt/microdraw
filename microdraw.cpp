@@ -16,11 +16,18 @@
 
 void md_get_pixel_x_bounds(MD_Image& image, const MD_Rect& rect, int& xLeftOut, int& xRightOut);
 
-void Font::InitFont(const char* bmpName, int w, int h)
+void Font::InitFont(const char* bmpName, int glyphWidth, int glyphHeight)
 {
-	m_GlyphSurfaceW = w;
-	m_GlyphSurfaceH = h;
+	m_GlyphSurfaceW = glyphWidth;
+	m_GlyphSurfaceH = glyphHeight;
 	m_Surface = md_load_image_with_key(bmpName, 0, 0, 0);
+}
+
+void Font::InitFontFromImageData(const char* data, int w, int h, int glyphWidth, int glyphHeight)
+{
+	m_GlyphSurfaceW = glyphWidth;
+	m_GlyphSurfaceH = glyphHeight;
+	m_Surface = md_load_image_from_565_data_with_key(data, w, h, 0, 0, 0);
 }
 
 int Font::GetGlyphWidth(char c) const

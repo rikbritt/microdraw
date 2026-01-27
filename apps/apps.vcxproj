@@ -98,9 +98,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Screen 1|x64'">
     <OutDir>$(SolutionDir)$(Platform)\</OutDir>
+    <TargetName>screen1</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Casio|x64'">
     <OutDir>$(SolutionDir)$(Platform)\</OutDir>
+    <TargetName>casio</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Screen 1|Win32'">
     <ClCompile>
