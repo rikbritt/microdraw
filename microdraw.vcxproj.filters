@@ -26,9 +26,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="microdraw_tft.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="microdraw.h">
       <Filter>Header Files</Filter>
     </ClInclude>

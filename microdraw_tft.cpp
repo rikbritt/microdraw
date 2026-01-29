@@ -1,5 +1,3 @@
-#include "microdraw_tft.h"
-
 #include "microdraw.h"
 
 #include <fstream>
@@ -38,12 +36,23 @@ void blit_to_fb() {
     //SDL_Delay(1000 / FB_FPS_LIMIT);
 }
 
-class MD_TFT_Image
+struct MD_Image
 {
-public:
+
+};
+
+struct MD_TFT_Image : public MD_Image
+{
+    ~MD_TFT_Image()
+    {
+        delete[] pixels;
+        pixels = nullptr;
+    }
+
     int32_t w = 0;
     int32_t h = 0;
     uint16_t key = 0;
+    uint16_t* pixels = nullptr;
 };
 
 struct MicroDrawContext
@@ -54,52 +63,39 @@ struct MicroDrawContext
 
 MicroDrawContext context;
 
-bool md_init_impl(int width, int height)
+bool md_init(int width, int height)
 {
     return true;
 }
 
-void md_deinit_impl()
+void md_deinit()
 {
     // TODO - leaks
     // clear context
 }
 
-MD_Image* md_load_image_impl(const char* filename)
+MD_Image* md_load_image(const char* filename)
 {
-    //SDL_Surface* image = SDL_LoadBMP(filename);
-    //if (!image)
-    //{
-    //    image = SDL_LoadPNG(filename);
-    //}
+    // NOT SUPPORTED
     return (MD_Image*)nullptr;
 }
 
-MD_Image* md_load_image_with_key_impl(const char* filename, uint8_t key_r, uint8_t key_g, uint8_t key_b)
+MD_Image* md_load_image_with_key(const char* filename, uint8_t key_r, uint8_t key_g, uint8_t key_b)
 {
-    //SDL_Surface* temp_font = SDL_LoadBMP(filename);
-    //if (!temp_font)
-    //{
-    //    temp_font = SDL_LoadPNG(filename);
-    //}
-    //SDL_PixelFormat format = context.canvas->format;
-
-    //// Force the font into the EXACT same format as our canvas (32-bit ARGB/XRGB)
-    //SDL_Surface* surface = SDL_ConvertSurface(temp_font, format);
-    //SDL_DestroySurface(temp_font);
-
-    //// Re-apply transparency on the NEW surface
-    //SDL_SetSurfaceColorKey(surface, true, SDL_MapSurfaceRGB(surface, 0, 0, 0));
+    // NOT SUPPORTED
     return (MD_Image*)nullptr;
 }
 
-MD_Image* md_create_image_impl(int w, int h)
+MD_Image* md_create_image(int w, int h)
 {
-    //SDL_Surface* new_surface = SDL_CreateSurface(w, h, SDL_PIXELFORMAT_RGBA32);
-    return (MD_Image*)nullptr;
+    MD_TFT_Image* new_image = new MD_TFT_Image();
+    new_image->w = w;
+    new_image->h = h;
+    new_image->pixels = new uint16_t[w * h];
+    return new_image;
 }
 
-void md_draw_pixel_to_image_impl(MD_Image& image, int x, int y, uint8_t r, uint8_t g, uint8_t b)
+void md_draw_pixel_to_image(MD_Image& image, int x, int y, uint8_t r, uint8_t g, uint8_t b)
 {
     //SDL_Surface* surface = (SDL_Surface*)&image;
     //Uint32* pixels = (Uint32*)surface->pixels;
@@ -107,29 +103,27 @@ void md_draw_pixel_to_image_impl(MD_Image& image, int x, int y, uint8_t r, uint8
     //pixels[pixelIdx] = SDL_MapSurfaceRGB(surface, r, g, b);
 }
 
-void md_destroy_image_impl(MD_Image& image)
+void md_destroy_image(MD_Image& image)
 {
-    //SDL_Surface* sdl_surface = (SDL_Surface*)&image;
-    //SDL_DestroySurface(sdl_surface);
+    MD_TFT_Image* tft_image = (MD_TFT_Image*)&image;
+    delete tft_image;
 }
 
-int md_get_image_width_impl(const MD_Image& image)
+int md_get_image_width(const MD_Image& image)
 {
-    //const SDL_Surface* sdl_src = (const SDL_Surface*)&image;
-    //return sdl_src->w;
-    return 0;
+    const MD_TFT_Image& tft_image = *(MD_TFT_Image*)&image;
+    return tft_image.w;
 }
 
-int md_get_image_height_impl(const MD_Image& image)
+int md_get_image_height(const MD_Image& image)
 {
-    //const SDL_Surface* sdl_src = (const SDL_Surface*)&image;
-    //return sdl_src->h;
-    return 0;
+    const MD_TFT_Image& tft_image = *(MD_TFT_Image*)&image;
+    return tft_image.h;
 }
 
-bool md_draw_image_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
+bool md_draw_image(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
 {
-    MD_TFT_Image& tftImage = *(MD_TFT_Image*)&image;
+    MD_TFT_Image& tft_image = *(MD_TFT_Image*)&image;
     //SDL_Surface* sdl_src = (SDL_Surface*)&image;
     //SDL_Rect* sdl_srcRect = (SDL_Rect*)srcRect;
     //SDL_Surface* sdl_dest = dest == nullptr ? context.canvas : (SDL_Surface*)dest;
@@ -137,14 +131,14 @@ bool md_draw_image_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Re
     //SDL_BlitSurface(sdl_src, sdl_srcRect, sdl_dest, sdl_destRect);
     const int32_t x = dest == nullptr ? 0 : destRect->x;
     const int32_t y = dest == nullptr ? 0 : destRect->y;
-    const uint16_t* data = nullptr;
+    const uint16_t* data = tft_image.pixels;
     // for 1 colour sprites?
     //context.tft->drawBitmap(x, y, bitmap, w, h,)
-    context.tft->pushImage(x, y, tftImage.w, tftImage.h, data, tftImage.key);
+    context.tft->pushImage(x, y, tft_image.w, tft_image.h, data, tft_image.key);
     return true;
 }
 
-bool md_draw_image_scaled_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
+bool md_draw_image_scaled(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
 {
     //SDL_Surface* sdl_src = (SDL_Surface*)&image;
     //SDL_Rect* sdl_srcRect = (SDL_Rect*)srcRect;
@@ -154,12 +148,12 @@ bool md_draw_image_scaled_impl(MD_Image& image, MD_Rect* srcRect, MD_Image* dest
     return true;
 }
 
-void md_filled_rect_impl(MD_Rect& rect, uint8_t r, uint8_t g, uint8_t b)
+void md_filled_rect(MD_Rect& rect, uint8_t r, uint8_t g, uint8_t b)
 {
     context.tft->fillRect(rect.x, rect.y, rect.w, rect.h, context.tft->color565(r, g, b));
 }
 
-void md_set_image_clip_impl(MD_Image& image, MD_Rect* rect)
+void md_set_image_clip(MD_Image& image, MD_Rect* rect)
 {
 
     //SDL_Surface* sdl_src = (SDL_Surface*)&image;
@@ -167,18 +161,18 @@ void md_set_image_clip_impl(MD_Image& image, MD_Rect* rect)
     //SDL_SetSurfaceClipRect(sdl_src, sdl_clipRect);
 }
 
-void md_set_clip_impl(MD_Rect* rect)
+void md_set_clip(MD_Rect* rect)
 {
-    //md_set_image_clip_impl(*(MD_Image*)context.canvas, rect);
+    //md_set_image_clip(*(MD_Image*)context.canvas, rect);
 }
 
-void md_set_colour_mod_impl(MD_Image& image, uint8_t key_r, uint8_t key_g, uint8_t key_b)
+void md_set_colour_mod(MD_Image& image, uint8_t key_r, uint8_t key_g, uint8_t key_b)
 {
     //SDL_SetSurfaceColorMod((SDL_Surface*)&image, key_r, key_g, key_b);
 }
 
 //void GetPixelXBounds(SDL_Surface* surface, SDL_Rect rect, int& xLeftOut, int& xRightOut)
-void md_get_pixel_x_bounds_impl(MD_Image& image, const MD_Rect& rect, int& xLeftOut, int& xRightOut)
+void md_get_pixel_x_bounds(MD_Image& image, const MD_Rect& rect, int& xLeftOut, int& xRightOut)
 {
     //SDL_Surface* surface = (SDL_Surface*)&image;
 
@@ -228,7 +222,7 @@ void md_get_pixel_x_bounds_impl(MD_Image& image, const MD_Rect& rect, int& xLeft
     //}
 }
 
-void md_render_impl()
+void md_render()
 {
     //SDL_SetRenderDrawColor(context.ren, 255, 255, 255, 255);
     //SDL_RenderClear(context.ren);
@@ -266,7 +260,7 @@ void md_render_impl()
 //}
 
 
-bool md_exit_raised_impl()
+bool md_exit_raised()
 {
     return context.exit_raised;
 }
