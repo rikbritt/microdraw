@@ -1,8 +1,8 @@
 #include "microdraw.h"
 
 #define MICRODRAW_SDL
-#include "casio/casio.h"
-#include "casio/large_lcd_numbers.h"
+#include "casio.h"
+#include "large_lcd_numbers.h"
 
 #include <ctime>
 

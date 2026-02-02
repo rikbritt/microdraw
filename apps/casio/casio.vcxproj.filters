@@ -13,24 +13,26 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\casio">
-      <UniqueIdentifier>{a462e92a-6b62-4714-98b7-228540b295ed}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="casio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="screen1.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="casio\casio.h">
-      <Filter>Source Files\casio</Filter>
+    <ClInclude Include="casio.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="casio\large_lcd_numbers.h">
-      <Filter>Source Files\casio</Filter>
+    <ClInclude Include="large_lcd_numbers.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\casio.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\large_lcd_numbers.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

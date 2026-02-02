@@ -1,8 +1,5 @@
 #include "microdraw.h"
 
-#define MICRODRAW_SDL
-#include "microdraw_sdl.h"
-
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -466,7 +463,7 @@ Gradient::~Gradient()
 
 void Gradient::Reset()
 {
-    md_destroy_image_impl(*m_Surface);
+    md_destroy_image(*m_Surface);
     m_Surface = nullptr;
 }
 
