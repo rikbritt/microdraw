@@ -1,0 +1,16 @@
+{
+  "name": "microdraw",
+  "version": "0.0.1",
+  "headers":["microdraw.h"],
+  "dependencies":{
+    "null0/TTGO TWatch Library V8": "*"
+  },
+  "build": {
+    "includeDir": "include",
+    "srcDir": ".",
+    "srcFilter":"+<*.cpp> -<*_sdl.cpp>",
+    "flags": [
+      "-I include"
+    ]
+  }
+}

@@ -26,7 +26,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="microdraw.h">
+    <ClInclude Include="include\microdraw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

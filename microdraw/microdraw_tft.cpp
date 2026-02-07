@@ -6,7 +6,7 @@
 #include <cmath>
 #include <algorithm>
 
-#include <TFT_eSPI.h>
+#include <libraries/TFT_eSPI/TFT_eSPI.h>
 
 const int FB_FPS_LIMIT = 4;
 
@@ -86,6 +86,21 @@ MD_Image* md_load_image_with_key(const char* filename, uint8_t key_r, uint8_t ke
     return (MD_Image*)nullptr;
 }
 
+MD_Image* md_load_image_from_565_data(const char* data, int width, int height)
+{
+    MD_TFT_Image* new_image = (MD_TFT_Image*)md_create_image(width, height);
+    memcpy(new_image->pixels, data, width * height * 2);
+    return (MD_Image*)new_image;
+}
+
+MD_Image* md_load_image_from_565_data_with_key(const char* data, int width, int height, uint8_t key_r, uint8_t key_g, uint8_t key_b)
+{
+    MD_TFT_Image* new_image = (MD_TFT_Image*)md_create_image(width, height);
+    memcpy(new_image->pixels, data, width * height * 2);
+    new_image->key = context.tft->color565(key_r, key_g, key_b);
+    return (MD_Image*)new_image;
+}
+
 MD_Image* md_create_image(int w, int h)
 {
     MD_TFT_Image* new_image = new MD_TFT_Image();
@@ -138,6 +153,11 @@ bool md_draw_image(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* d
     return true;
 }
 
+bool md_draw_image(MD_Image& image)
+{
+    return md_draw_image(image, nullptr, nullptr, nullptr);
+}
+
 bool md_draw_image_scaled(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
 {
     //SDL_Surface* sdl_src = (SDL_Surface*)&image;
@@ -146,6 +166,11 @@ bool md_draw_image_scaled(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_
     //SDL_Rect* sdl_destRect = (SDL_Rect*)destRect;
     //SDL_BlitSurfaceScaled(sdl_src, sdl_srcRect, sdl_dest, sdl_destRect, SDL_SCALEMODE_NEAREST);
     return true;
+}
+
+bool md_draw_image_scaled(MD_Image& image, MD_Rect& src, MD_Rect& dest)
+{
+    return md_draw_image_scaled(image, &src, nullptr, &dest);
 }
 
 void md_filled_rect(MD_Rect& rect, uint8_t r, uint8_t g, uint8_t b)

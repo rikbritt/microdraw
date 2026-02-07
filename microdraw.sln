@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "microdraw", "microdraw.vcxproj", "{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL3", "sdl3\VisualC\SDL\SDL.vcxproj", "{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TFT_eSPI", "TFT_eSPI\TFT_eSPI.vcxproj", "{15800509-ADCD-4318-86D1-FC6F76A30A5E}"
@@ -14,6 +12,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "casio", "apps\casio\casio.vcxproj", "{A676262A-57FD-4F68-894A-C93794F3C232}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "screen1", "apps\screen1\screen1.vcxproj", "{D3399355-5E6B-4441-8C44-9D0E9186DF42}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "microdraw", "microdraw\microdraw.vcxproj", "{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,21 +27,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug SDL|x64.ActiveCfg = Debug SDL|x64
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug SDL|x64.Build.0 = Debug SDL|x64
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug SDL|x86.ActiveCfg = Debug TFT|Win32
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug SDL|x86.Build.0 = Debug TFT|Win32
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug TFT|x64.ActiveCfg = Debug TFT|x64
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug TFT|x64.Build.0 = Debug TFT|x64
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug TFT|x86.ActiveCfg = Debug TFT|Win32
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug TFT|x86.Build.0 = Debug TFT|Win32
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.ImageConverter|x64.ActiveCfg = Release|x64
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.ImageConverter|x86.ActiveCfg = Release|Win32
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.ImageConverter|x86.Build.0 = Release|Win32
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x64.ActiveCfg = Release|x64
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x64.Build.0 = Release|x64
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x86.ActiveCfg = Release|Win32
-		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x86.Build.0 = Release|Win32
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Debug SDL|x64.ActiveCfg = Debug|x64
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Debug SDL|x64.Build.0 = Debug|x64
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Debug SDL|x86.ActiveCfg = Debug|Win32
@@ -117,6 +102,22 @@ Global
 		{D3399355-5E6B-4441-8C44-9D0E9186DF42}.Release|x64.Build.0 = Release|x64
 		{D3399355-5E6B-4441-8C44-9D0E9186DF42}.Release|x86.ActiveCfg = Release|Win32
 		{D3399355-5E6B-4441-8C44-9D0E9186DF42}.Release|x86.Build.0 = Release|Win32
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug SDL|x64.ActiveCfg = Debug SDL|x64
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug SDL|x64.Build.0 = Debug SDL|x64
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug SDL|x86.ActiveCfg = Debug SDL|Win32
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug SDL|x86.Build.0 = Debug SDL|Win32
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug TFT|x64.ActiveCfg = Debug TFT|x64
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug TFT|x64.Build.0 = Debug TFT|x64
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug TFT|x86.ActiveCfg = Debug TFT|Win32
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Debug TFT|x86.Build.0 = Debug TFT|Win32
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.ImageConverter|x64.ActiveCfg = Debug SDL|x64
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.ImageConverter|x64.Build.0 = Debug SDL|x64
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.ImageConverter|x86.ActiveCfg = Debug SDL|Win32
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.ImageConverter|x86.Build.0 = Debug SDL|Win32
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x64.ActiveCfg = Release|x64
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x64.Build.0 = Release|x64
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x86.ActiveCfg = Release|Win32
+		{5F0CE9B8-75F8-4D7C-888C-B503F736AC04}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

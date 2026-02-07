@@ -359,13 +359,21 @@ void JSONVal::Reset()
 	delete m_value;
 	if (m_object)
 	{
-		for (auto const& [key, val] : *m_object) delete val;
+		for (std::map<std::string, JSONVal*>::iterator iter = m_object->begin(); iter != m_object->end(); ++iter)
+		{
+			delete iter->second;
+		}
+
 		delete m_object;
 		m_object = nullptr;
 	}
 	if (m_array)
 	{
-		for (auto* item : *m_array) delete item;
+		for (std::vector<JSONVal*>::iterator iter = m_array->begin(); iter != m_array->end(); ++iter)
+		{
+			delete* iter;
+		}
+
 		delete m_array;
 		m_array = nullptr;
 	}
@@ -377,7 +385,7 @@ const JSONVal& JSONVal::GetObject(const char* name) const
 	{
 		return Invalid;
 	}
-	if (!m_object->contains(name))
+	if (m_object->find(name) == m_object->end())
 	{
 		return Invalid;
 	}
@@ -473,8 +481,8 @@ MD_Color HSLToSDLColor(float h, float s, float l, uint8_t a)
 	// Clamp values to ensure they are in range
 	h = fmod(h, 360.0f);
 	if (h < 0) h += 360.0f;
-	s = std::clamp(s, 0.0f, 1.0f);
-	l = std::clamp(l, 0.0f, 1.0f);
+	s = std::max(0.0f, std::min(s, 1.0f)); // std::clamp(s, 0.0f, 1.0f);
+	l = std::max(0.0f, std::min(l, 1.0f)); //std::clamp(l, 0.0f, 1.0f);
 
 	float c = (1.0f - std::abs(2.0f * l - 1.0f)) * s; // Chroma
 	float x = c * (1.0f - std::abs(fmod(h / 60.0f, 2.0f) - 1.0f));
