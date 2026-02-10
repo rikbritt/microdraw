@@ -508,7 +508,7 @@ MD_Color HSLToSDLColor(float h, float s, float l, uint8_t a)
 
 int LerpInt(float t, int from, int to)
 {
-	const int out = ((to - from) * t) + from;
+	const int out = (int)((to - from) * t) + from;
 	return out;
 }
 
