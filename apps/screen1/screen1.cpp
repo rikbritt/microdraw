@@ -18,6 +18,7 @@
 const int SCREEN_WIDTH = 320;
 const int SCREEN_HEIGHT = 480;
 
+
 void UpdateClock(int x, int y, Font& font)
 {
     static char time_str[32];
@@ -600,6 +601,227 @@ void WeatherSat::DrawWeatherSat(Font& font)
     draw_text(font, 28, currTempY - (font.m_GlyphSurfaceH/3), buff, 1);
 }
 
+static ReactorCell reactorCells[] = {
+    { 18,  399 },
+    { 34,  399 },
+    { 50,  399 },
+    { 66,  399 },
+    { 82,  399 },
+    { 98,  399 },
+    { 114, 399 },
+    { 130, 399 },
+
+    { 26,  413 },
+    { 42,  413 },
+    { 58,  413 },
+    { 74,  413 },
+    { 90,  413 },
+    { 106, 413 },
+    { 122, 413 },
+    { 138, 413 },
+
+    { 18,  427 },
+    { 34,  427 },
+    { 50,  427 },
+    { 66,  427 },
+    { 82,  427 },
+    { 98,  427 },
+    { 114, 427 },
+    { 130, 427 }
+};
+constexpr int numReactorCells = 24;
+
+class Screen
+{
+public:
+    void InitScreen();
+    void UpdateScreen();
+    void DrawScreen();
+//private:
+    enum class ScreenState
+    {
+        Main,
+        Message
+    };
+
+    ScreenState m_screenState = ScreenState::Main;
+    WeatherData m_weather;
+    UselessFactData m_uselessFact;
+    WeatherSat m_weatherSat;
+    int m_reloadValsCnt = 0;
+    float m_reloadValsT = 0.0f;
+    std::map<std::string, std::string> m_values;
+
+    MD_Image* m_bg = nullptr;
+    MD_Image* m_message_bg = nullptr;
+    MD_Image* m_reactor_red = nullptr;
+
+
+    MD_Image* control_bar = nullptr;
+    MD_Image* control_bar2 = nullptr;
+    static constexpr int numControlStacks = 5;
+    ControlIndicator controlStacks[numControlStacks];
+
+    static constexpr int num_sine = 8;
+    PanningImage sines[num_sine];
+
+    Font m_monoFont;
+    Font m_varFont;
+    Font m_fontNumLarge;
+    TextWall m_operationsText;
+    PanningImage m_topological;
+};
+
+void Screen::InitScreen()
+{
+    LoadConfigToMap("values.txt", m_values);
+    m_weatherSat.InitWeatherSat(m_weather);
+
+    m_bg = md_load_image("back_ops.bmp");
+    m_message_bg = md_load_image("message.bmp");
+    m_reactor_red = md_load_image_with_key("reactor_red.bmp", 0, 0, 0);
+
+
+    control_bar = md_load_image_with_key("control_bar.bmp", 0, 0, 0);
+    control_bar2 = md_load_image_with_key("control_bar2.bmp", 0, 0, 0);
+
+    controlStacks[0].InitControlIndicator(9, 161, 344, *control_bar);
+    controlStacks[1].InitControlIndicator(9, 184, 344, *control_bar2);
+    controlStacks[2].InitControlIndicator(9, 209, 344, *control_bar);
+    controlStacks[3].InitControlIndicator(9, 232, 344, *control_bar2);
+    controlStacks[4].InitControlIndicator(9, 256, 344, *control_bar2);
+
+    m_monoFont.InitFont("font.bmp", 8, 8);
+    m_varFont.InitFont("font.bmp", 8, 8);
+    m_varFont.MakeVariableWidth();
+    m_fontNumLarge.InitFont("num_large.bmp", 14, 15);
+    m_fontNumLarge.m_NumbersOnly = true;
+    m_operationsText.InitTextWall(160, 170, 140, 140, m_monoFont);
+    m_topological.InitPanningImage("topological.bmp", 10 + 1, 160, 140 - 2, 70 - 1);
+
+    for (int i = 0; i < num_sine; ++i)
+    {
+        PanningImage& sine = sines[i];
+        sine.InitPanningImage("sine.bmp", 273, 362, 32, 80);
+        sine.m_panHorizontal = false;
+        sine.m_Speed = i > 2 ? 1.0f : 2.0f;
+        sine.m_Scroll = (float)(i * 4);
+    }
+}
+
+void Screen::UpdateScreen()
+{
+    static const int reloadCntMax = 100;
+    if (m_reloadValsCnt == 0)
+    {
+        m_values.clear();
+        LoadConfigToMap("values.txt", m_values);
+        if (m_weather.UpdateWeatherData())
+        {
+            m_weatherSat.OnWeatherUpdated();
+        }
+
+        if (m_uselessFact.UpdateUselessFact())
+        {
+
+        }
+    }
+    m_reloadValsCnt = (m_reloadValsCnt + 1) % reloadCntMax;
+    m_reloadValsT = (float)m_reloadValsCnt / (float)reloadCntMax;
+
+
+}
+
+void Screen::DrawScreen()
+{
+    // Draw Background
+    if (m_bg)
+    {
+        md_draw_image(*m_bg, 0, 0);
+    }
+
+    // Update & Draw Clock Text
+    int clock_x = 50;
+    int clock_y = 70;
+    UpdateClock(clock_x, clock_y, m_fontNumLarge);
+
+
+    snprintf(buff, sizeof(buff), "%s", m_weather.m_CurrentWeatherDesc.c_str());
+    draw_text(m_varFont, 50, 110, buff, 1);
+
+    snprintf(buff, sizeof(buff), "Current Temp %0.1fC", m_weather.m_CurrentTemp);
+    draw_text(m_varFont, 50, 120, buff, 1);
+
+    //snprintf(buff, sizeof(buff), "%0.1fC Min %0.1fC Max", weather.m_TempMin, weather.m_TempMax);
+    //draw_text(canvas, varFont, 20, 115, buff, 2);
+
+    m_weatherSat.DrawWeatherSat(m_varFont);
+
+    for (int i = 0; i < numControlStacks; ++i)
+    {
+        controlStacks[i].UpdateAndDraw();
+    }
+
+    // Reactor Cells
+
+    // Chance of a cell change
+    if (rand() % 5 == 0)
+    {
+        const int reacPosIdx = rand() % numReactorCells;
+        reactorCells[reacPosIdx].on = !reactorCells[reacPosIdx].on;
+    }
+
+    for (int i = 0; i < numReactorCells; ++i)
+    {
+        if (!reactorCells[i].on)
+        {
+            continue;
+        }
+        md_draw_image(*m_reactor_red, reactorCells[i].x, reactorCells[i].y);
+    }
+
+    {
+        md_set_colour_mod(*m_reactor_red, (unsigned char)(255 * m_reloadValsT), (unsigned char)(255 * m_reloadValsT), (unsigned char)(255 * m_reloadValsT));
+        md_draw_image(*m_reactor_red, reactorCells[0].x, reactorCells[0].y);
+        md_set_colour_mod(*m_reactor_red, 255, 255, 255);
+    }
+
+    static int operationsFeedMode = 0;
+    static int operationsFeedModeCnt = 0;
+    operationsFeedModeCnt = (operationsFeedModeCnt + 1) % 40;
+    if (operationsFeedModeCnt == 0)
+    {
+        operationsFeedMode = (operationsFeedMode + 1) % 2;
+        operationsFeedModeCnt = 0;
+    }
+
+    if (operationsFeedMode == 0)
+    {
+        //operationsFeed.UpdateFeed(operationsText, values);
+        m_operationsText.Clear();
+        m_operationsText.SetWrappedLine(0, m_uselessFact.m_UselessFact.c_str());
+        m_operationsText.DrawTextWall(255, 255, 255);
+    }
+    else
+    {
+        static float a = 0.0f, b = 0.0f, c = 0.0f;
+
+        a += 0.2f;
+        b += 0.1f;
+        c += 0.05f;
+        drawSpinningCube(m_operationsText.m_Text, m_operationsText.m_CharW, m_operationsText.m_CharH, a, b, c);
+
+        m_operationsText.DrawTextWall(0, 255, 255);
+    }
+
+    m_topological.UpdateAndDrawPanningImage();
+    for (int i = 0; i < num_sine; ++i)
+    {
+        sines[i].UpdateAndDrawPanningImage();
+    }
+
+}
+
 int main(int argc, char* argv[]) 
 {
     if (!md_init(SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -609,226 +831,15 @@ int main(int argc, char* argv[])
 
     srand((unsigned int)time(NULL));
 
-    WeatherData weather;
-    UselessFactData uselessFact;
+    Screen screen;
+    screen.InitScreen();
 
-    ReactorCell reactorCells[] = {
-        { 18,  399 },
-        { 34,  399 },
-        { 50,  399 },
-        { 66,  399 },
-        { 82,  399 },
-        { 98,  399 },
-        { 114, 399 },
-        { 130, 399 },
-
-        { 26,  413 },
-        { 42,  413 },
-        { 58,  413 },
-        { 74,  413 },
-        { 90,  413 },
-        { 106, 413 },
-        { 122, 413 },
-        { 138, 413 },
-
-        { 18,  427 },
-        { 34,  427 },
-        { 50,  427 },
-        { 66,  427 },
-        { 82,  427 },
-        { 98,  427 },
-        { 114, 427 },
-        { 130, 427 }
-    };
-    constexpr int numReactorCells = 24;
-
-    std::map<std::string, std::string> values;
-
-    MD_Image* bg = md_load_image("back_ops.bmp");
-    MD_Image* reactor_red = md_load_image_with_key("reactor_red.bmp", 0, 0, 0);
-
-
-    MD_Image* control_bar = md_load_image_with_key("control_bar.bmp", 0, 0, 0);
-    MD_Image* control_bar2 = md_load_image_with_key("control_bar2.bmp", 0, 0, 0);
-    constexpr int numControlStacks = 5;
-    ControlIndicator controlStacks[numControlStacks];
-    controlStacks[0].InitControlIndicator(9, 161, 344, *control_bar);
-    controlStacks[1].InitControlIndicator(9, 184, 344, *control_bar2);
-    controlStacks[2].InitControlIndicator(9, 209, 344, *control_bar);
-    controlStacks[3].InitControlIndicator(9, 232, 344, *control_bar2);
-    controlStacks[4].InitControlIndicator(9, 256, 344, *control_bar2);
-
-    Font monoFont;
-    monoFont.InitFont("font.bmp", 8, 8);
-
-    Font varFont;
-    varFont.InitFont("font.bmp", 8, 8);
-    varFont.MakeVariableWidth();
-
-    Font fontNumLarge;
-    fontNumLarge.InitFont("num_large.bmp", 14, 15);
-    fontNumLarge.m_NumbersOnly = true;
-
-    TextWall operationsText;
-    operationsText.InitTextWall(160, 170, 140, 140, monoFont);
-    //FeedView operationsFeed;
-
-    PanningImage topological;
-    topological.InitPanningImage("topological.bmp", 10 + 1, 160, 140 - 2, 70 - 1);
-
-    int reloadValsCnt = 0;
-    float reloadValsT = 0.0f;
-
-    constexpr int num_sine = 8;
-    PanningImage sines[num_sine];
-    for (int i = 0; i < num_sine; ++i)
+    while (md_exit_raised() == false)
     {
-        PanningImage& sine = sines[i];
-        sine.InitPanningImage("sine.bmp", 273, 362, 32, 80);
-        sine.m_panHorizontal = false;
-        sine.m_Speed = i > 2 ? 1.0f : 2.0f;
-        sine.m_Scroll = (float)(i * 4);
-    }
-
-    LoadConfigToMap("values.txt", values);
-
-
-    bool run = true;
-    int frame = 0;
-
-    WeatherSat weatherSat;
-    weatherSat.InitWeatherSat(weather);
-
-    while (run)
-    {
-        static const int reloadCntMax = 100;
-        if (reloadValsCnt == 0)
-        {
-            values.clear();
-            LoadConfigToMap("values.txt", values);
-            if (weather.UpdateWeatherData())
-            {
-                weatherSat.OnWeatherUpdated();
-            }
-
-            if (uselessFact.UpdateUselessFact())
-            {
-
-            }
-        }
-        reloadValsCnt = (reloadValsCnt + 1) % reloadCntMax;
-        reloadValsT = (float)reloadValsCnt / (float)reloadCntMax;
-
-
-        // Draw Background
-        if (bg)
-        {
-            md_draw_image(*bg, 0, 0);
-        }
-
-
-        for (int i = 0; i < numControlStacks; ++i)
-        {
-            controlStacks[i].UpdateAndDraw();
-        }
-
-        // Update & Draw Clock Text
-        int clock_x = 50;
-        int clock_y = 70;
-        UpdateClock(clock_x, clock_y, fontNumLarge);
-
-
-        snprintf(buff, sizeof(buff), "%s", weather.m_CurrentWeatherDesc.c_str());
-        draw_text(varFont, 50, 110, buff, 1);
-
-        snprintf(buff, sizeof(buff), "Current Temp %0.1fC", weather.m_CurrentTemp);
-        draw_text(varFont, 50, 120, buff, 1);
-
-        //snprintf(buff, sizeof(buff), "%0.1fC Min %0.1fC Max", weather.m_TempMin, weather.m_TempMax);
-        //draw_text(canvas, varFont, 20, 115, buff, 2);
-
-        weatherSat.DrawWeatherSat(varFont);
-
-
-        static int operationsFeedMode = 0;
-        static int operationsFeedModeCnt = 0;
-        operationsFeedModeCnt = (operationsFeedModeCnt + 1) % 40;
-        if (operationsFeedModeCnt == 0)
-        {
-            operationsFeedMode = (operationsFeedMode + 1) % 2;
-            operationsFeedModeCnt = 0;
-        }
-
-        if (operationsFeedMode == 0)
-        {
-            //operationsFeed.UpdateFeed(operationsText, values);
-            operationsText.Clear();
-            operationsText.SetWrappedLine(0, uselessFact.m_UselessFact.c_str());
-            operationsText.DrawTextWall(255, 255, 255);
-        }
-        else
-        {
-            static float a = 0.0f, b = 0.0f, c = 0.0f;
-
-            a += 0.2f;
-            b += 0.1f;
-            c += 0.05f;
-            drawSpinningCube(operationsText.m_Text, operationsText.m_CharW, operationsText.m_CharH, a, b, c);
-
-            operationsText.DrawTextWall(0, 255, 255);
-        }
-
-        topological.UpdateAndDrawPanningImage();
-        for (int i = 0; i < num_sine; ++i)
-        {
-            sines[i].UpdateAndDrawPanningImage();
-        }
-
-        // Chance of a cell change
-        if (rand() % 5 == 0)
-        {
-            const int reacPosIdx = rand() % numReactorCells;
-            reactorCells[reacPosIdx].on = !reactorCells[reacPosIdx].on;
-        }
-
-        for (int i = 0; i < numReactorCells; ++i)
-        {
-            if (!reactorCells[i].on)
-            {
-                continue;
-            }
-            md_draw_image(*reactor_red, reactorCells[i].x, reactorCells[i].y);
-        }
-
-        {
-            md_set_colour_mod(*reactor_red, (unsigned char)(255 * reloadValsT), (unsigned char)(255 * reloadValsT), (unsigned char)(255 * reloadValsT));
-            md_draw_image(*reactor_red, reactorCells[0].x, reactorCells[0].y);
-            md_set_colour_mod(*reactor_red, 255, 255, 255);
-        }
-
+        screen.UpdateScreen();
+        screen.DrawScreen();
 
         md_render();
-        
-        //SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
-        //SDL_RenderClear(ren);
-        ////SDL_RenderCopy(ren, screen_tex, NULL, NULL);
-        //SDL_UpdateTexture(screen_tex, NULL, canvas->pixels, canvas->pitch);
-        //SDL_RenderTexture(ren, screen_tex, nullptr, nullptr);
-
-        //// 4. Update Display
-        //blit_to_fb(canvas);
-
-        ////static MD_Rect blockout;
-        ////blockout.x = 13;
-        ////blockout.y = 250;
-        ////blockout.w = 134;
-        ////blockout.h = 121;
-        ////SDL_SetRenderDrawColor(ren, 100, 0, 0, 255);
-        ////SDL_RenderFillRect(ren, &blockout);
-
-        //SDL_RenderPresent(ren);
-
-        run = md_exit_raised() == false;
     }
 
     // TODO more
