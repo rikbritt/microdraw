@@ -258,7 +258,7 @@ void checkTouch()
         ++framesTouched;
         if(framesTouched > 20)
         {
-            b += 25;
+            b += 10;
             if(b > 255)
             {
                 b = 0;
