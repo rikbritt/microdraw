@@ -6,6 +6,7 @@
 #include <cmath>
 #include <algorithm>
 
+#include <LilyGoWatch.h>
 #include <libraries/TFT_eSPI/TFT_eSPI.h>
 
 const int FB_FPS_LIMIT = 4;
@@ -52,12 +53,43 @@ struct MD_TFT_Image : public MD_Image
     int32_t w = 0;
     int32_t h = 0;
     uint16_t key = 0;
+    bool hasKey = false;
+    bool hasMod = false;
+    uint8_t mod_r = 0;
+    uint8_t mod_g = 0;
+    uint8_t mod_b = 0;
     uint16_t* pixels = nullptr;
 };
+
+uint16_t RGB565(uint8_t key_r, uint8_t key_g, uint8_t key_b)
+{
+    return ((key_r & 0xF8) << 8) | ((key_g & 0xFC) << 3) | (key_b >> 3);
+}
+
+inline void unpackRGB565(uint16_t color, uint8_t& r, uint8_t& g, uint8_t& b) {
+    // 1. Extract the raw bits
+    // Red:   Top 5 bits (Mask 0xF800, Shift Right 11)
+    // Green: Middle 6 bits (Mask 0x07E0, Shift Right 5)
+    // Blue:  Bottom 5 bits (Mask 0x001F)
+
+    uint8_t r5 = (color >> 11) & 0x1F; // Range 0-31
+    uint8_t g6 = (color >> 5) & 0x3F; // Range 0-63
+    uint8_t b5 = color & 0x1F; // Range 0-31
+
+    // 2. Expand to 8-bit (0-255)
+    // We use bit shifting to scale efficiently without slow floating point math.
+    // Logic: Copy the high bits into the low bits to fill the range.
+    // Example: 11111 (31) -> 11111000 | 00000111 = 11111111 (255)
+
+    r = (r5 << 3) | (r5 >> 2);
+    g = (g6 << 2) | (g6 >> 4);
+    b = (b5 << 3) | (b5 >> 2);
+}
 
 struct MicroDrawContext
 {
     TFT_eSPI* tft = nullptr;
+    TFT_eSprite* buffer = nullptr;
     bool exit_raised = false;
 };
 
@@ -65,6 +97,10 @@ MicroDrawContext context;
 
 bool md_init(int width, int height)
 {
+    context.tft = TTGOClass::getWatch()->tft;
+    context.buffer = new TFT_eSprite(context.tft);
+    context.buffer->createSprite(width, height, 1);
+    context.buffer->setSwapBytes(true);
     return true;
 }
 
@@ -95,10 +131,11 @@ MD_Image* md_load_image_from_565_data(const char* data, int width, int height)
 
 MD_Image* md_load_image_from_565_data_with_key(const char* data, int width, int height, uint8_t key_r, uint8_t key_g, uint8_t key_b)
 {
-    MD_TFT_Image* new_image = (MD_TFT_Image*)md_create_image(width, height);
-    memcpy(new_image->pixels, data, width * height * 2);
-    new_image->key = context.tft->color565(key_r, key_g, key_b);
-    return (MD_Image*)new_image;
+    MD_TFT_Image* img = (MD_TFT_Image*)md_create_image(width, height);
+    memcpy(img->pixels, data, width * height * 2);
+    img->key = context.tft->color565(key_r, key_g, key_b);
+    img->hasKey = true;
+    return (MD_Image*)img;
 }
 
 MD_Image* md_create_image(int w, int h)
@@ -139,18 +176,77 @@ int md_get_image_height(const MD_Image& image)
 bool md_draw_image(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
 {
     MD_TFT_Image& tft_image = *(MD_TFT_Image*)&image;
-    //SDL_Surface* sdl_src = (SDL_Surface*)&image;
-    //SDL_Rect* sdl_srcRect = (SDL_Rect*)srcRect;
-    //SDL_Surface* sdl_dest = dest == nullptr ? context.canvas : (SDL_Surface*)dest;
-    //SDL_Rect* sdl_destRect = (SDL_Rect*)destRect;
-    //SDL_BlitSurface(sdl_src, sdl_srcRect, sdl_dest, sdl_destRect);
-    const int32_t x = dest == nullptr ? 0 : destRect->x;
-    const int32_t y = dest == nullptr ? 0 : destRect->y;
+    const int imgW = md_get_image_width(image);
+    const int imgH = md_get_image_height(image);
+
+    if (!tft_image.hasKey)
+    {
+        if (srcRect == nullptr && destRect == nullptr)
+        {
+            context.buffer->pushImage(0, 0, imgW, imgH, (const uint16_t*)tft_image.pixels);
+            return true;
+        }
+    }
+
+    const int32_t x = destRect == nullptr ? 0 : destRect->x;
+    const int32_t y = destRect == nullptr ? 0 : destRect->y;
+    const int32_t srcX = srcRect == nullptr ? 0 : srcRect->x;
+    const int32_t srcY = srcRect == nullptr ? 0 : srcRect->y;
+    const int32_t srcW = srcRect == nullptr ? imgW : srcRect->w;
+    const int32_t srcH = srcRect == nullptr ? imgH : srcRect->h;
     const uint16_t* data = tft_image.pixels;
     // for 1 colour sprites?
     //context.tft->drawBitmap(x, y, bitmap, w, h,)
-    context.tft->pushImage(x, y, tft_image.w, tft_image.h, data, tft_image.key);
+    //context.tft->pushImage(x, y, tft_image.w, tft_image.h, data, tft_image.key);
+
+    if (tft_image.hasMod)
+    {
+        for (int xIdx = 0; xIdx < srcW; ++xIdx)
+        {
+            for (int yIdx = 0; yIdx < srcH; ++yIdx)
+            {
+                int idx = srcX + xIdx + ((srcY + yIdx) * imgW);
+                if (data[idx] != tft_image.key)
+                {
+                    uint8_t col_r, col_g, col_b;
+                    unpackRGB565(data[idx], col_r, col_g, col_b);
+                    const uint16_t col = RGB565((col_r * tft_image.mod_r) / 255, (col_g * tft_image.mod_g) / 255, (col_b * tft_image.mod_b) / 255);
+                    context.buffer->drawPixel(x + xIdx, y + yIdx, col);
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int xIdx = 0; xIdx < srcW; ++xIdx)
+        {
+            for (int yIdx = 0; yIdx < srcH; ++yIdx)
+            {
+                int idx = srcX + xIdx + ((srcY + yIdx) * imgW);
+                if (data[idx] != tft_image.key)
+                {
+                    context.buffer->drawPixel(x + xIdx, y + yIdx, data[idx]);
+                }
+            }
+        }
+    }
+
     return true;
+
+
+    //MD_TFT_Image& tft_image = *(MD_TFT_Image*)&image;
+    ////SDL_Surface* sdl_src = (SDL_Surface*)&image;
+    ////SDL_Rect* sdl_srcRect = (SDL_Rect*)srcRect;
+    ////SDL_Surface* sdl_dest = dest == nullptr ? context.canvas : (SDL_Surface*)dest;
+    ////SDL_Rect* sdl_destRect = (SDL_Rect*)destRect;
+    ////SDL_BlitSurface(sdl_src, sdl_srcRect, sdl_dest, sdl_destRect);
+    //const int32_t x = dest == nullptr ? 0 : destRect->x;
+    //const int32_t y = dest == nullptr ? 0 : destRect->y;
+    //const uint16_t* data = tft_image.pixels;
+    //// for 1 colour sprites?
+    ////context.tft->drawBitmap(x, y, bitmap, w, h,)
+    //context.tft->pushImage(x, y, tft_image.w, tft_image.h, data, tft_image.key);
+    //return true;
 }
 
 bool md_draw_image(MD_Image& image)
@@ -160,17 +256,53 @@ bool md_draw_image(MD_Image& image)
 
 bool md_draw_image_scaled(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
 {
-    //SDL_Surface* sdl_src = (SDL_Surface*)&image;
-    //SDL_Rect* sdl_srcRect = (SDL_Rect*)srcRect;
-    //SDL_Surface* sdl_dest = dest == nullptr ? context.canvas : (SDL_Surface*)dest;
-    //SDL_Rect* sdl_destRect = (SDL_Rect*)destRect;
-    //SDL_BlitSurfaceScaled(sdl_src, sdl_srcRect, sdl_dest, sdl_destRect, SDL_SCALEMODE_NEAREST);
+    //dumb and slow
+    MD_TFT_Image& tft_image = *(MD_TFT_Image*)&image;
+    MD_Rect src;
+    if(srcRect)
+    {
+        src = *srcRect;
+    }
+    else
+    {
+        src.x = 0;
+        src.y = 0;
+        src.w = md_get_image_width(image);
+        src.h = md_get_image_height(image);
+    }
+
+    MD_Rect dst;
+    if(destRect)
+    {
+        dst = *destRect;
+    }
+    else
+    {
+        dst.x = 0;
+        dst.y = 0;
+    }
+    for(int y=0; y<src.h; ++y)
+    {
+        for(int x=0; x<src.w; ++x)
+        {
+            const int srcX = src.x + x;
+            const int srcY = src.y + y;
+            const uint16_t col = tft_image.pixels[(srcY*tft_image.h) + srcX];
+            if(col == tft_image.key)
+            {
+                continue;
+            }
+            context.tft->drawPixel(dst.x + x, dst.y + y, col);
+        }
+    }
     return true;
 }
 
 bool md_draw_image_scaled(MD_Image& image, MD_Rect& src, MD_Rect& dest)
 {
-    return md_draw_image_scaled(image, &src, nullptr, &dest);
+    //temp ignore scaling
+    return md_draw_image(image, &src, nullptr, &dest);
+    //return md_draw_image_scaled(image, &src, nullptr, &dest);
 }
 
 void md_filled_rect(MD_Rect& rect, uint8_t r, uint8_t g, uint8_t b)
@@ -193,7 +325,18 @@ void md_set_clip(MD_Rect* rect)
 
 void md_set_colour_mod(MD_Image& image, uint8_t key_r, uint8_t key_g, uint8_t key_b)
 {
-    //SDL_SetSurfaceColorMod((SDL_Surface*)&image, key_r, key_g, key_b);
+    MD_TFT_Image& tft_image = *(MD_TFT_Image*)&image;
+    if (key_r == 255 && key_g == 255 && key_b == 255)
+    {
+        tft_image.hasMod = false;
+    }
+    else
+    {
+        tft_image.hasMod = true;
+        tft_image.mod_r = key_r;
+        tft_image.mod_g = key_g;
+        tft_image.mod_b = key_b;
+    }
 }
 
 //void GetPixelXBounds(SDL_Surface* surface, SDL_Rect rect, int& xLeftOut, int& xRightOut)
@@ -249,26 +392,7 @@ void md_get_pixel_x_bounds(MD_Image& image, const MD_Rect& rect, int& xLeftOut, 
 
 void md_render()
 {
-    //SDL_SetRenderDrawColor(context.ren, 255, 255, 255, 255);
-    //SDL_RenderClear(context.ren);
-    ////SDL_RenderCopy(ren, screen_tex, NULL, NULL);
-    //SDL_UpdateTexture(context.screen_tex, NULL, context.canvas->pixels, context.canvas->pitch);
-    //SDL_RenderTexture(context.ren, context.screen_tex, nullptr, nullptr);
-
-    //// 4. Update Display
-    //blit_to_fb(context.canvas);
-
-    //SDL_RenderPresent(context.ren);
-
-
-    //SDL_Event e;
-    //while (SDL_PollEvent(&e))
-    //{
-    //    if (e.type == SDL_EVENT_QUIT)
-    //    {
-    //        context.exit_raised = true;
-    //    }
-    //}
+    context.buffer->pushSprite(0, 0);
 }
 //
 //SDL_Surface* LoadBMPWithColorKey(const char* bmpName, SDL_PixelFormat format)
