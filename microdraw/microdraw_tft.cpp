@@ -6,8 +6,10 @@
 #include <cmath>
 #include <algorithm>
 
+#ifndef WIN32
 #include <LilyGoWatch.h>
 #include <libraries/TFT_eSPI/TFT_eSPI.h>
+#endif //WIN32
 
 const int FB_FPS_LIMIT = 4;
 
@@ -252,6 +254,16 @@ bool md_draw_image(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* d
 bool md_draw_image(MD_Image& image)
 {
     return md_draw_image(image, nullptr, nullptr, nullptr);
+}
+
+bool md_draw_image(MD_Image& image, int x, int y)
+{
+    MD_Rect dest;
+    dest.x = x;
+    dest.y = y;
+    dest.w = md_get_image_width(image);
+    dest.h = md_get_image_height(image);
+    return md_draw_image(image, nullptr, nullptr, &dest);
 }
 
 bool md_draw_image_scaled(MD_Image& image, MD_Rect* srcRect, MD_Image* dest, MD_Rect* destRect)
