@@ -10,6 +10,9 @@
 
 #ifndef WIN32
 #include <LilyGoWatch.h>
+#include <WiFi.h>
+#include <esp_bt.h>
+#include <esp_wifi.h>
 #endif //WIN32
 #include <ctime>
 
@@ -24,6 +27,8 @@ MD_Image* img_battery_50;
 MD_Image* img_battery_75;
 MD_Image* img_battery_100;
 MD_Image* img_battery_charging;
+
+int timeLastScreenOn = 0;
 
 struct Time
 {
@@ -137,6 +142,18 @@ BatteryState GetBatteryState()
 //    ttgo->openBL();
 //    ttgo->power->clearIRQ();
 //}
+void disableWireless() {
+    // 1. Turn off WiFi
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+    
+    // 2. Turn off Bluetooth
+    btStop();
+
+    // 3. (Optional) Force the hardware radios into a lower power state
+    esp_wifi_stop();
+    esp_bt_controller_disable();
+}
 
 Time watchLastTime;
 void app_setup()
@@ -150,6 +167,11 @@ void app_setup()
     watch->bl->adjust(150);
     //watch->disableAudio();
     //watch->rtc->syncToSystem();
+    watch->touchToMonitor();
+    watch->turnOffGPS();
+    watch->bma->disableAccel();
+    disableWireless();
+    //watch->power->EnableCoulombcounter();
     setCpuFrequencyMhz(20);
 #endif //WIN32
 
@@ -248,7 +270,7 @@ void draw_battery_level()
     md_draw_image(*battery_img, x, y);
 }
 
-void checkSideButton()
+void updateDisplayBL()
 {
 #ifndef WIN32
     TTGOClass* ttgo = TTGOClass::getWatch();
@@ -261,7 +283,19 @@ void checkSideButton()
         // Example: Toggle backlight
         static bool blState = true;
         blState = !blState;
-        if (blState) ttgo->openBL(); else ttgo->closeBL();
+        if (ttgo->bl->isOn())
+        {
+            ttgo->closeBL();
+        }
+        else
+        {
+            ttgo->openBL();
+            timeLastScreenOn = millis();
+        }
+    }
+    else if(millis() - timeLastScreenOn > 5000)
+    {
+        ttgo->closeBL();
     }
 
     //if (ttgo->power->isPEKLongPressIRQ()) {
@@ -292,8 +326,10 @@ void checkTouch()
         //}
 
         ++framesTouched;
-        if(framesTouched > 20)
+        //if(framesTouched > 20)
         {
+            timeLastScreenOn = millis();
+            ttgo->openBL();
             b += 10;
             if(b > 255)
             {
@@ -322,7 +358,7 @@ void delay(unsigned int ms)
 
 void app_loop()
 {
-    checkSideButton();
+    updateDisplayBL();
     checkTouch();
 
     bool drawFace = false;
@@ -339,6 +375,11 @@ void app_loop()
         delay(200);
     }
 
+    //TTGOClass* watch = TTGOClass::getWatch();
+    //const float c = watch->power->getCoulombData();
+    //char s[32];
+    //sprintf(s, "%0f", c);
+    //watch->tft->drawString(s, 20, 20);
     if(drawFace)
     {
         if (bg)
