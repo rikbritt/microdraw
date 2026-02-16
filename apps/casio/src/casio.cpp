@@ -30,6 +30,15 @@ struct Time
     int hours;
     int minutes;
     int seconds;
+
+    bool operator==(const Time& other) const
+    {
+        return hours == other.hours && minutes == other.minutes && seconds == other.seconds;
+    }
+    bool operator!=(const Time& other) const
+    {
+        return !(*this==other);
+    }
 };
 
 Time GetTime()
@@ -104,6 +113,32 @@ BatteryState GetBatteryState()
 #endif
 }
 
+//void goToLightSleep()
+//{
+//    TTGOClass* ttgo = TTGOClass::getWatch();
+//    // 1. Turn off the screen and backlight
+//    ttgo->closeBL();
+//    ttgo->displaySleep();
+//
+//    // 2. Tell the AXP202 to wake us up on a button press
+//    // We use the PEK (Power Enable Key) interrupt
+//    ttgo->power->setChgPwrUpTime(AXP202_PWROFF_4S); // Adjust timings
+//    ttgo->power->enableIRQ(AXP202_PEK_SHORT_PRESS_IRQ, true);
+//    ttgo->power->clearIRQ();
+//
+//    // 3. Enter Light Sleep
+//    // This pauses the code right here
+//    esp_light_sleep_start();
+//
+//    // --- The watch is now "off" ---
+//    // After a button press, the code resumes here:
+//
+//    ttgo->displayWakeup();
+//    ttgo->openBL();
+//    ttgo->power->clearIRQ();
+//}
+
+Time watchLastTime;
 void app_setup()
 {
 
@@ -113,7 +148,9 @@ void app_setup()
     watch->openBL();
     //Lower the brightness
     watch->bl->adjust(150);
-    //setCpuFrequencyMhz(20);
+    //watch->disableAudio();
+    //watch->rtc->syncToSystem();
+    setCpuFrequencyMhz(20);
 #endif //WIN32
 
     if (!md_init(SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -140,10 +177,9 @@ void app_setup()
 
 }
 
-void draw_time_lcd()
+void draw_time_lcd(const Time& time)
 {
     static char time_str[32];
-    const Time time = GetTime();
     int x = 30;
     int y = 110;
     md_set_colour_mod(*large_lcd_numbers.m_Surface, 109, 111, 98);
@@ -277,19 +313,44 @@ void checkTouch()
 #endif
 }
 
+#ifdef WIN32
+void delay(unsigned int ms)
+{
+    
+}
+#endif
+
 void app_loop()
 {
-    if (bg)
-    {
-        md_draw_image(*bg);
-    }
-
-
-    draw_time_lcd();
-    draw_battery_level();
     checkSideButton();
     checkTouch();
 
-    //draw_num(canvas, large_lcd_numbers, 10, 10, "12345", 1);
-    md_render();
+    bool drawFace = false;
+
+    Time currentTime = GetTime();
+    if(currentTime != watchLastTime)
+    {
+        // Redraw the time
+        drawFace = true;
+        watchLastTime = currentTime;
+    }
+    else
+    {
+        delay(200);
+    }
+
+    if(drawFace)
+    {
+        if (bg)
+        {
+            md_draw_image(*bg);
+        }
+
+
+        // Draw for the next second
+        draw_time_lcd(currentTime);
+        draw_battery_level();
+        //draw_num(canvas, large_lcd_numbers, 10, 10, "12345", 1);
+        md_render();
+    }
 }
